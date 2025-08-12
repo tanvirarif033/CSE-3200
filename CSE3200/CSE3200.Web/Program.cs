@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
+using System.Reflection;
 
 //  Bootstrap Logger
 var configuration = new ConfigurationBuilder()
@@ -36,6 +37,7 @@ try
 
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    var migrationAssembly = Assembly.GetExecutingAssembly();
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
@@ -53,6 +55,12 @@ try
         .ReadFrom.Configuration(builder.Configuration)
 
     );
+    #region MediatR Configuration
+    builder.Services.AddMediatR(cfg => {
+        cfg.RegisterServicesFromAssembly(migrationAssembly);
+       // cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
+    });
+    #endregion
 
     var app = builder.Build();
 
