@@ -1,0 +1,159 @@
+﻿@using CSE3200.Web.Models
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<style>
+    .login-wrapper {
+        display: flex;
+        min-height: 100vh;
+        background-color: #0d1117;
+        color: white;
+    }
+
+    .login-left {
+        flex: 1;
+        background-color: #1e1e58;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4rem;
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+    }
+
+        .login-left h2 {
+            font-weight: bold;
+        }
+
+    .login-feature {
+        background-color: #2c2c6c;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .login-feature i {
+            font-size: 1.5rem;
+        }
+
+    .login-right {
+        flex: 1;
+        background-color: #161b22;
+        padding: 4rem;
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
+        .login-right .form-control {
+            background-color: #2d333b;
+            border: none;
+            color: white;
+        }
+
+            .login-right .form-control::placeholder {
+                color: #aaa;
+            }
+
+    .btn-login {
+        background-color: #2c2c6c;
+        border: none;
+        color: white;
+        font-weight: bold;
+    }
+
+        .btn-login:hover {
+            background-color: #3f3f8f;
+        }
+
+    a {
+        color: #58a6ff;
+    }
+</style>
+
+<div class="container-fluid login-wrapper">
+    <!-- Left panel -->
+    <div class="login-left">
+        <div class="text-center mb-4">
+            <i class="bi bi-box-arrow-in-right" style="font-size: 3rem;"></i>
+            <h2 class="mt-3">Welcome Back to Our Website!</h2>
+            <p>Continue your learning journey with us</p>
+        </div>
+
+        <div class="login-feature">
+            <i class="bi bi-book"></i>
+            <div>
+                <strong>Resume Learning</strong><br />
+                <small>Pick up right where you left off</small>
+            </div>
+        </div>
+
+        <div class="login-feature">
+            <i class="bi bi-people"></i>
+            <div>
+                <strong>Connect with Peers</strong><br />
+                <small>Join study groups and discussions</small>
+            </div>
+        </div>
+
+        <div class="login-feature">
+            <i class="bi bi-trophy"></i>
+            <div>
+                <strong>Track Progress</strong><br />
+                <small>Monitor your achievements</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="login-right">
+        <h3 class="mb-3">Login to Your Account</h3>
+        <p>Please enter your credentials to continue</p>
+        <form method="post" asp-route-returnUrl="/Admin/Dashboard">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email Address</label>
+                <input asp-for="Email" class="form-control" placeholder="Enter your email" autocomplete="username" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Password</label>
+                <input asp-for="Password" class="form-control" placeholder="Enter your password" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input asp-for="RememberMe" class="form-check-input" />
+                <label asp-for="RememberMe" class="form-check-label">@Html.DisplayNameFor(m => m.RememberMe)</label>
+            </div>
+
+            <div class="d-grid mb-2">
+                <button type="submit" class="btn btn-login">Sign in to your account</button>
+            </div>
+
+            <div class="text-end">
+                <a asp-action="ForgotPassword">Forgot password?</a>
+            </div>
+
+            <div class="mt-3 text-center">
+                Don't have an account? <a asp-action="Register" asp-route-returnUrl="/Admin/Dashboard">Create an account</a>
+            </div>
+
+
+
+        </form>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+    
