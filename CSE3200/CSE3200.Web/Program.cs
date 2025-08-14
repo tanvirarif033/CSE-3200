@@ -5,7 +5,7 @@ using CSE3200.Application.Features.Products.Commands;
 using CSE3200.Infrastructure;
 using CSE3200.Web;
 using CSE3200.Web.Data;
-
+using CSE3200.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -46,9 +46,11 @@ try
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
          options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    //defualt identity chole gese tai ei razor page add korte hoise
+    builder.Services.AddRazorPages();
 
-    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-        .AddEntityFrameworkStores<ApplicationDbContext>();
+    //builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    //    .AddEntityFrameworkStores<ApplicationDbContext>();
     builder.Services.AddControllersWithViews();
 
     //  Serilog
@@ -64,6 +66,10 @@ try
         cfg.RegisterServicesFromAssembly(migrationAssembly);
         cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
     });
+    #endregion
+
+    #region Identity Configuration
+    builder.Services.AddIdentity();
     #endregion
 
     var app = builder.Build();
