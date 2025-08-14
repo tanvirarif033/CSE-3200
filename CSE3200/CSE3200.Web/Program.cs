@@ -1,6 +1,8 @@
 
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using CSE3200.Application.Features.Products.Commands;
+using CSE3200.Infrastructure;
 using CSE3200.Web;
 using CSE3200.Web.Data;
 
@@ -27,20 +29,22 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    //  Autofac
-    builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-    builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
-    {
-        containerBuilder.RegisterModule(new WebModule());
-    });
+
 
 
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     var migrationAssembly = Assembly.GetExecutingAssembly();
 
+    //  Autofac
+    builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+    builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+    {
+        containerBuilder.RegisterModule(new WebModule(connectionString, migrationAssembly?.FullName));
+    });
+
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
+         options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -58,7 +62,7 @@ try
     #region MediatR Configuration
     builder.Services.AddMediatR(cfg => {
         cfg.RegisterServicesFromAssembly(migrationAssembly);
-       // cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
+        cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
     });
     #endregion
 

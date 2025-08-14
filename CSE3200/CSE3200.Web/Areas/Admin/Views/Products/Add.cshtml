@@ -1,0 +1,76 @@
+﻿@model AddProductModel
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Add Product</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Products" class="text-white-50">Products</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Add</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New Product</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="Products" asp-action="Add" method="post" novalidate>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="Name" class="form-label">Product Name</label>
+                                <input type="text" class="form-control" asp-for="Name">
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Category" class="form-label">Category</label>
+                                <input type="text" class="form-control" asp-for="Category">
+                                <span asp-validation-for="Category" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Price" class="form-label">Price</label>
+                                <input type="number" step="0.01" class="form-control" asp-for="Price">
+                                <span asp-validation-for="Price" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Rating" class="form-label">Rating</label>
+                                <input type="number" step="0.1" min="0" max="5" class="form-control" asp-for="Rating">
+                                <span asp-validation-for="Rating" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" asp-for="Quantity">
+                                <span asp-validation-for="Quantity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Details" class="form-label">Details</label>
+                                <textarea class="form-control" asp-for="Details" rows="3"></textarea>
+                                <span asp-validation-for="Details" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/Products" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

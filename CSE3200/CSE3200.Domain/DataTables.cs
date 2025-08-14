@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CSE3200.Domain
 {
-    public abstract class DataTables
+    public abstract class DataTables : IDataTables
     {
         public int Start { get; set; }
         public int Length { get; set; }
@@ -18,7 +19,7 @@ namespace CSE3200.Domain
             get
             {
                 if (Length > 0)
-                    return (Start / Length) + 1;
+                    return Start / Length + 1;
                 else
                     return 1;
             }
@@ -78,4 +79,3 @@ namespace CSE3200.Domain
         public string Value { get; set; }
     }
 }
-

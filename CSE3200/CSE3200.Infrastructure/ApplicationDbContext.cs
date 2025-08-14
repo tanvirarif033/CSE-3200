@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using CSE3200.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace CSE3200.Infrastructure
         private readonly string _migrationAssembly;
 
 
-        //public DbSet<Product> Products { get; set; }
+        public DbSet<Product> Products { get; set; }
 
 
         public ApplicationDbContext(string connectionString, string migrationAssembly)

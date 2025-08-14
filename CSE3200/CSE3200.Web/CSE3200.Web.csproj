@@ -11,7 +11,6 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="MediatR" Version="13.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7" />
@@ -23,6 +22,12 @@
 
   <ItemGroup>
     <Folder Include="Areas\Admin\Data\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CSE3200.Application\CSE3200.Application.csproj" />
+    <ProjectReference Include="..\CSE3200.Domain\CSE3200.Domain.csproj" />
+    <ProjectReference Include="..\CSE3200.Infrastructure\CSE3200.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

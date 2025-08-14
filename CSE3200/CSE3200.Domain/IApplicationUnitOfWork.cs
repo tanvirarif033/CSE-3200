@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSE3200.Domain.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ namespace CSE3200.Domain
     public interface IApplicationUnitOfWork : IUnitOfWork
     {
 
-        //public IProductRepository ProductRepository { get; }
+        public IProductRepository ProductRepository { get; }
 
     }
 }
