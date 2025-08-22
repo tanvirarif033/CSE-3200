@@ -47,7 +47,7 @@ namespace CSE3200.Infrastructure
 
             // Seed data
             builder.Entity<ApplicationRole>().HasData(RoleSeed.GetRoles());
-           // builder.Entity<ApplicationUserClaim>().HasData(ClaimSeed.GetClaims());
+            builder.Entity<ApplicationUserClaim>().HasData(ClaimSeed.GetClaims());
 
         }
     }

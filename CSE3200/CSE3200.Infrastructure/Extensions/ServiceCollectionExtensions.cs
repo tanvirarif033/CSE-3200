@@ -58,10 +58,10 @@ namespace CSE3200.Infrastructure.Extensions
                 //    policy.RequireRole("Admin", "SalesManager");
                 //});
 
-                //options.AddPolicy("UserAddPermission", policy =>
-                //{
-                //    policy.RequireClaim("create_user", "allowed");
-                //});
+                options.AddPolicy("UserAddPermission", policy =>
+                {
+                    policy.RequireClaim("create_user", "allowed");
+                });
 
                 //options.AddPolicy("CustomerAddPermission", policy =>
                 //{

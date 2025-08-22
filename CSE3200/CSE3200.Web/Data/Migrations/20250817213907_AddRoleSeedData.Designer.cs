@@ -4,6 +4,7 @@ using CSE3200.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CSE3200.Web.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250817213907_AddRoleSeedData")]
+    partial class AddRoleSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,7 +97,7 @@ namespace CSE3200.Web.Data.Migrations
                             Id = new Guid("ae3e5918-2742-4bac-95ff-2326c1e5966e"),
                             ConcurrencyStamp = "8/18/2025 1:02:03 AM",
                             Name = "Donor",
-                            NormalizedName = "DONOR"
+                            NormalizedName = "DONAR"
                         },
                         new
                         {
@@ -236,15 +239,6 @@ namespace CSE3200.Web.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AspNetUserClaims", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = -1,
-                            ClaimType = "create_user",
-                            ClaimValue = "allowed",
-                            UserId = new Guid("29671297-6bd9-476a-f172-08ddddda291f")
-                        });
                 });
 
             modelBuilder.Entity("CSE3200.Infrastructure.Identity.ApplicationUserLogin", b =>
