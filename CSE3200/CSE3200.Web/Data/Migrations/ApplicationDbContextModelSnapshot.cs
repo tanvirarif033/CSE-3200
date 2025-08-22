@@ -80,6 +80,36 @@ namespace CSE3200.Web.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("1d348b36-86e9-4e74-9c10-7fb59d035468"),
+                            ConcurrencyStamp = "8/18/2025 1:02:01 AM",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = new Guid("ae3e5918-2742-4bac-95ff-2326c1e5966e"),
+                            ConcurrencyStamp = "8/18/2025 1:02:03 AM",
+                            Name = "Donor",
+                            NormalizedName = "DONAR"
+                        },
+                        new
+                        {
+                            Id = new Guid("02352cdf-e55b-458d-91f0-6063ec9300df"),
+                            ConcurrencyStamp = "8/18/2025 1:02:04 AM",
+                            Name = "Volunteer",
+                            NormalizedName = "VOLUNTEER"
+                        },
+                        new
+                        {
+                            Id = new Guid("d716bb55-e6b5-4639-a396-2d8c81f30e32"),
+                            ConcurrencyStamp = "8/18/2025 1:02:04 AM",
+                            Name = "Field Representative",
+                            NormalizedName = "FIELD REPRESENTATIVE"
+                        });
                 });
 
             modelBuilder.Entity("CSE3200.Infrastructure.Identity.ApplicationRoleClaim", b =>

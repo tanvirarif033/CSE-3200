@@ -58,7 +58,7 @@ namespace CSE3200.Web.Controllers
                 user.LastName = model.LastName;
 
                 var result = await _userManager.CreateAsync(user, model.Password);
-               // await _userManager.AddToRoleAsync(user, "Customer");
+                await _userManager.AddToRoleAsync(user, "Donor");
 
                 if (result.Succeeded)
                 {
@@ -153,15 +153,21 @@ namespace CSE3200.Web.Controllers
             return View(model);
         }
 
-        [Authorize]
+        
+        [HttpGet, Authorize]
+        public IActionResult Logout()
+        {
+            return View();
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, Authorize]
         public async Task<IActionResult> LogoutAsync(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-            returnUrl ??= Url.Content("~/");
-
-            return LocalRedirect(returnUrl);
+            // Redirect to home page instead of returnUrl to avoid immediate redirect back to login
+            return LocalRedirect("~/");
         }
 
         public IActionResult AccessDenied()

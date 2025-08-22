@@ -44,6 +44,38 @@ namespace CSE3200.Infrastructure.Extensions
                 options.User.RequireUniqueEmail = true;
             });
         }
+        public static void AddPolicy(this IServiceCollection services)
+        {
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("CustomAccess", policy =>
+                {
+                    policy.RequireRole("Admin");
+                    policy.RequireRole("Field Representative");
+                });
+                //options.AddPolicy("AdminOrSalesManager", policy =>
+                //{
+                //    policy.RequireRole("Admin", "SalesManager");
+                //});
+
+                //options.AddPolicy("UserAddPermission", policy =>
+                //{
+                //    policy.RequireClaim("create_user", "allowed");
+                //});
+
+                //options.AddPolicy("CustomerAddPermission", policy =>
+                //{
+                //    policy.RequireClaim("create_customer", "allowed");
+                //});
+
+
+
+            });
+
+
+        }
+
+
 
     }
 }

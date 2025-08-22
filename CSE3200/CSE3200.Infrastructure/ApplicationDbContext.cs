@@ -8,18 +8,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CSE3200.Infrastructure.Identity;
+using CSE3200.Infrastructure.Seeds;
 
 namespace CSE3200.Infrastructure
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser,
         ApplicationRole, Guid,
         ApplicationUserClaim, ApplicationUserRole,
-        ApplicationUserLogin, ApplicationRoleClaim,
+        ApplicationUserLogin, 
+        ApplicationRoleClaim,
         ApplicationUserToken>
     {
         private readonly string _connectionString;
         private readonly string _migrationAssembly;
-
 
         public DbSet<Product> Products { get; set; }
 
@@ -34,9 +35,20 @@ namespace CSE3200.Infrastructure
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer(_connectionString, (x) => x.MigrationsAssembly(_migrationAssembly));
+                optionsBuilder.UseSqlServer(_connectionString,
+                    x => x.MigrationsAssembly(_migrationAssembly));
             }
             base.OnConfiguring(optionsBuilder);
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Seed data
+            builder.Entity<ApplicationRole>().HasData(RoleSeed.GetRoles());
+           // builder.Entity<ApplicationUserClaim>().HasData(ClaimSeed.GetClaims());
+
         }
     }
 }

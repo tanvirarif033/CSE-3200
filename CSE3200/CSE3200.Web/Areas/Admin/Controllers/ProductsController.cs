@@ -2,12 +2,14 @@
 using CSE3200.Domain.Entities;
 using CSE3200.Domain.Services;
 using CSE3200.Web.Areas.Admin.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Web;
 
 namespace CSE3200.Web.Areas.Admin.Controllers
 {
-    [Area("Admin")]
+    [Area("Admin"),Authorize(Roles ="Admin , Field Representative")]
+ 
     public class ProductsController : Controller
     {
         private readonly IProductService _productService;
