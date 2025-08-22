@@ -1,0 +1,88 @@
+﻿@model AddUserModel
+@{
+    ViewData["Title"] = "Add User";
+}
+
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Add User</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Users" class="text-white-50">Users</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Add</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New User</h5>
+                    </div>
+                    <form asp-action="AddUser" method="post" novalidate>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="FirstName" class="form-label">First Name</label>
+                                <input asp-for="FirstName" class="form-control" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="LastName" class="form-label">Last Name</label>
+                                <input asp-for="LastName" class="form-control" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label">Email</label>
+                                <input asp-for="Email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label">Password</label>
+                                <input asp-for="Password" type="password" class="form-control" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="DateOfBirth" class="form-label">Date of Birth</label>
+                                <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Role" class="form-label">Role</label>
+                                <select asp-for="Role" class="form-select">
+                                    <option value="">-- Select Role --</option>
+                                    <option>Admin</option>
+                                    <option>Donor</option>
+                                    <option>Volunteer</option>
+                                    <option>Field Representative</option>
+                                </select>
+                                <span asp-validation-for="Role" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/Users" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -71,6 +71,7 @@ try
     #region Identity Configuration
     builder.Services.AddIdentity();
     #endregion
+    builder.Services.AddPolicy();
 
     var app = builder.Build();
 
@@ -88,6 +89,8 @@ try
     app.UseHttpsRedirection();
     app.UseRouting();
 
+
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapStaticAssets();
