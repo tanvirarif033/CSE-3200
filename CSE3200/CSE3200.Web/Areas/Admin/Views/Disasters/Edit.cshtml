@@ -1,0 +1,86 @@
+﻿@using CSE3200.Domain.Entities
+@model EditDisasterModel
+@{
+    ViewData["Title"] = "Edit Disaster";
+}
+
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Edit Disaster</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Disasters" class="text-white-50">Disasters</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Edit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Edit Disaster</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="Disasters" asp-action="Edit" method="post" novalidate>
+                        <input type="hidden" asp-for="Id" />
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">Disaster Title</label>
+                                <input type="text" class="form-control" asp-for="Title">
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label">Description</label>
+                                <textarea class="form-control" asp-for="Description" rows="4"></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Location" class="form-label">Location</label>
+                                <input type="text" class="form-control" asp-for="Location">
+                                <span asp-validation-for="Location" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="OccurredDate" class="form-label">Occurred Date</label>
+                                <input type="date" class="form-control" asp-for="OccurredDate">
+                                <span asp-validation-for="OccurredDate" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Severity" class="form-label">Severity</label>
+                                <select class="form-control" asp-for="Severity" asp-items="Html.GetEnumSelectList<DisasterSeverity>()">
+                                    <option value="">Select Severity</option>
+                                </select>
+                                <span asp-validation-for="Severity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="AffectedPeople" class="form-label">Affected People</label>
+                                <input type="number" class="form-control" asp-for="AffectedPeople" min="1">
+                                <span asp-validation-for="AffectedPeople" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="RequiredAssistance" class="form-label">Required Assistance</label>
+                                <textarea class="form-control" asp-for="RequiredAssistance" rows="3"></textarea>
+                                <span asp-validation-for="RequiredAssistance" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/Disasters" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Disaster</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
