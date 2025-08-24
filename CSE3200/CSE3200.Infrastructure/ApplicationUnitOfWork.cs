@@ -11,14 +11,14 @@ namespace CSE3200.Infrastructure
     public class ApplicationUnitOfWork : UnitOfWork, IApplicationUnitOfWork
     {
         public ApplicationUnitOfWork(ApplicationDbContext context,
-           IProductRepository productRepository) : base(context)
+           IProductRepository productRepository,
+           IDisasterRepository disasterRepository) : base(context)
         {
-
             ProductRepository = productRepository;
+            DisasterRepository = disasterRepository;
         }
 
-
         public IProductRepository ProductRepository { get; private set; }
-
+        public IDisasterRepository DisasterRepository { get; private set; }
     }
 }

@@ -1,0 +1,120 @@
+﻿@model IList<Disaster>
+@using CSE3200.Domain.Entities
+@{
+    ViewData["Title"] = "Rejected Disasters";
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+        }
+
+        .badge-rejected {
+            background-color: #dc3545;
+        }
+
+        .disaster-card {
+            border-left: 4px solid #dc3545;
+            margin-bottom: 1rem;
+        }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Rejected Disasters</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Disasters">Disasters</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Rejected</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        @if (Model.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Rejected Disaster Reports</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Location</th>
+                                    <th>Severity</th>
+                                    <th>Occurred Date</th>
+                                    <th>Affected People</th>
+                                    <th>Rejected By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var disaster in Model)
+                                {
+                                    <tr>
+                                        <td>@disaster.Title</td>
+                                        <td>@disaster.Location</td>
+                                        <td><span class="badge bg-secondary">@disaster.Severity</span></td>
+                                        <td>@disaster.OccurredDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@disaster.AffectedPeople</td>
+                                        <td>@disaster.ApprovedBy</td>
+                                        <td>
+                                            <a href="/Admin/Disasters/Edit/@disaster.Id" class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="/Admin/Disasters/DeleteConfirmation/@disaster.Id" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">No Rejected Disasters</h4>
+                    <p class="text-muted">There are no rejected disaster reports.</p>
+                    <a href="/Admin/Disasters" class="btn btn-primary mt-2">Back to Disasters</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
