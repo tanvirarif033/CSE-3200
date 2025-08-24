@@ -23,7 +23,7 @@ namespace CSE3200.Infrastructure
         private readonly string _migrationAssembly;
 
         public DbSet<Product> Products { get; set; }
-
+        public DbSet<Disaster> Disasters { get; set; }
 
         public ApplicationDbContext(string connectionString, string migrationAssembly)
         {
@@ -48,6 +48,28 @@ namespace CSE3200.Infrastructure
             // Seed data
             builder.Entity<ApplicationRole>().HasData(RoleSeed.GetRoles());
             builder.Entity<ApplicationUserClaim>().HasData(ClaimSeed.GetClaims());
+
+            builder.Entity<Disaster>(entity =>
+            {
+                entity.Property(d => d.Title).IsRequired().HasMaxLength(200);
+                entity.Property(d => d.Description).IsRequired();
+                entity.Property(d => d.Location).IsRequired().HasMaxLength(100);
+                entity.Property(d => d.Severity).IsRequired();
+                entity.Property(d => d.Status).IsRequired();
+                entity.Property(d => d.CreatedBy).IsRequired().HasMaxLength(450);
+                entity.Property(d => d.CreatedDate).IsRequired();
+                entity.Property(d => d.RequiredAssistance).IsRequired();
+                entity.Property(d => d.AffectedPeople).IsRequired();
+
+                // Make ApprovedBy and ApprovedDate optional
+                entity.Property(d => d.ApprovedBy).HasMaxLength(450);
+                entity.Property(d => d.ApprovedDate).IsRequired(false);
+
+                // Add indexes
+                entity.HasIndex(d => d.Status);
+                entity.HasIndex(d => d.CreatedBy);
+                entity.HasIndex(d => d.CreatedDate);
+            });
 
         }
     }

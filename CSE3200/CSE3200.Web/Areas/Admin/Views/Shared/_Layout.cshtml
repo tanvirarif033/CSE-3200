@@ -297,6 +297,19 @@
                             </a>
                         </li>
 
+                        @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
+                            </li>
+                        }
+
 
 
                         <!--end::Sidebar Menu-->

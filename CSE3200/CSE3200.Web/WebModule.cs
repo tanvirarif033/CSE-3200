@@ -1,11 +1,15 @@
 ﻿using Autofac;
+using CSE3200.Application.Features.Disasters.Commands;
+using CSE3200.Application.Features.Disasters.Queries;
 using CSE3200.Application.Features.Products.Commands;
 using CSE3200.Application.Services;
 using CSE3200.Domain;
+using CSE3200.Domain.Entities;
 using CSE3200.Domain.Repositories;
 using CSE3200.Domain.Services;
 using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Repositories;
+using MediatR;
 
 
 namespace CSE3200.Web
@@ -41,6 +45,18 @@ namespace CSE3200.Web
             // builder.RegisterType<AddProductCommandHandler>().AsSelf();
             builder.RegisterType<AddProductCommand>().AsSelf();
 
+            // Disaster-related registrations
+            builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<DisasterService>().As<IDisasterService>()
+                .InstancePerLifetimeScope();
+
+            // Register command handlers with logger
+            builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
+            builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
+            builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
+            builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
 
 
             base.Load(builder);

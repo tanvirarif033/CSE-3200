@@ -1,0 +1,187 @@
+﻿@model AddDisasterModel
+@using CSE3200.Domain.Entities
+@{
+    ViewData["Title"] = "Add Disaster";
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: #3f51b5;
+            border-color: #3f51b5;
+        }
+
+            .btn-primary:hover {
+                background-color: #303f9f;
+                border-color: #303f9f;
+            }
+
+        .validation-summary-errors {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Add Disaster</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Disasters" class="text-white-50">Disasters</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Add</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New Disaster</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="Disasters" asp-action="Add" method="post" novalidate>
+                        <div class="card-body">
+                            <!-- Display success messages -->
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success">
+                                    @TempData["SuccessMessage"]
+                                </div>
+                            }
+
+                            <!-- Display general error messages -->
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger">
+                                    @TempData["ErrorMessage"]
+                                </div>
+                            }
+
+                            <!-- Validation Summary -->
+                            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">Disaster Title *</label>
+                                <input type="text" class="form-control" asp-for="Title" placeholder="Enter disaster title">
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Description" class="form-label">Description *</label>
+                                <textarea class="form-control" asp-for="Description" rows="4" placeholder="Enter detailed description of the disaster"></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Location" class="form-label">Location *</label>
+                                <input type="text" class="form-control" asp-for="Location" placeholder="Enter location where disaster occurred">
+                                <span asp-validation-for="Location" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="OccurredDate" class="form-label">Occurred Date *</label>
+                                <input type="date" class="form-control" asp-for="OccurredDate">
+                                <span asp-validation-for="OccurredDate" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Severity" class="form-label">Severity Level *</label>
+                                <select class="form-control" asp-for="Severity" asp-items="Html.GetEnumSelectList<DisasterSeverity>()">
+                                    <option value="">Select Severity Level</option>
+                                </select>
+                                <span asp-validation-for="Severity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="AffectedPeople" class="form-label">Number of Affected People *</label>
+                                <input type="number" class="form-control" asp-for="AffectedPeople" min="1" placeholder="Enter number of affected people">
+                                <span asp-validation-for="AffectedPeople" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="RequiredAssistance" class="form-label">Required Assistance *</label>
+                                <textarea class="form-control" asp-for="RequiredAssistance" rows="3" placeholder="List the types of assistance needed (food, medicine, shelter, etc.)"></textarea>
+                                <span asp-validation-for="RequiredAssistance" class="text-danger small"></span>
+                            </div>
+
+                            @if (User.IsInRole("Field Representative"))
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    Your disaster report will be submitted for admin approval before being published. You will receive a notification once it's approved or rejected.
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/Disasters" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Create Disaster Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Add jQuery first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Add jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Set max date to today for occurred date
+            const today = new Date().toISOString().split('T')[0];
+            $('#OccurredDate').attr('max', today);
+
+            // Client-side validation for affected people
+            $('#AffectedPeople').on('input', function () {
+                if (this.value < 1) {
+                    this.value = 1;
+                }
+            });
+
+            // Clear temp messages after 5 seconds
+            setTimeout(function () {
+                $('.alert').fadeOut(1000);
+            }, 5000);
+        });
+    </script>
+}

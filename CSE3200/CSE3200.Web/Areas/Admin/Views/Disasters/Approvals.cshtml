@@ -1,0 +1,131 @@
+﻿@model IList<Disaster>
+@using CSE3200.Domain.Entities
+@using CSE3200.Web.Extensions
+@{
+    ViewData["Title"] = "Pending Approvals";
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+        }
+
+        .badge-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .disaster-card {
+            border-left: 4px solid #ffc107;
+            margin-bottom: 1rem;
+        }
+
+            .disaster-card:hover {
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Pending Approvals</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Disasters">Disasters</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Approvals</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        @if (Model.Any())
+        {
+            <div class="row">
+                @foreach (var disaster in Model)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card disaster-card">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">@disaster.Title</h6>
+                                <span class="badge bg-dark">@disaster.Severity</span>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">@disaster.Description.Truncate(100)</p>
+                                <div class="mb-2">
+                                    <strong>Location:</strong> @disaster.Location
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Occurred:</strong> @disaster.OccurredDate.ToString("yyyy-MM-dd")
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Affected:</strong> @disaster.AffectedPeople people
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Assistance:</strong> @disaster.RequiredAssistance.Truncate(50)
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Created by:</strong> @disaster.CreatedBy
+                                </div>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <form asp-action="Approve" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@disaster.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm me-2">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </form>
+                                <form asp-action="Reject" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@disaster.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle"></i> Reject
+                                    </button>
+                                </form>
+                                <a href="/Admin/Disasters/Edit/@disaster.Id" class="btn btn-outline-primary btn-sm ms-2">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">No Pending Approvals</h4>
+                    <p class="text-muted">All disaster reports have been reviewed and processed.</p>
+                    <a href="/Admin/Disasters" class="btn btn-primary mt-2">Back to Disasters</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
