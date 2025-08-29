@@ -1,4 +1,3 @@
-
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSE3200.Application.Features.Products.Commands;
@@ -11,13 +10,14 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
+// ? (optional, but nice to have)
+using Microsoft.AspNetCore.Authentication.Google; // for clarity
 
 //  Bootstrap Logger
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
-
 
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(configuration)
@@ -28,9 +28,6 @@ try
     Log.Information("Application is starting.");
 
     var builder = WebApplication.CreateBuilder(args);
-
-
-
 
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
                            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
@@ -46,36 +43,42 @@ try
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
          options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-    //defualt identity chole gese tai ei razor page add korte hoise
-    builder.Services.AddRazorPages();
 
-    //builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    //    .AddEntityFrameworkStores<ApplicationDbContext>();
+    // Razor Pages + MVC
+    builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
 
-    //  Serilog
+    // Serilog
     builder.Host.UseSerilog((context, lc) => lc
        .MinimumLevel.Debug()
         .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
         .Enrich.FromLogContext()
         .ReadFrom.Configuration(builder.Configuration)
-
     );
-    #region MediatR Configuration
+
+    // MediatR
     builder.Services.AddMediatR(cfg => {
         cfg.RegisterServicesFromAssembly(migrationAssembly);
         cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
     });
-    #endregion
 
-    #region Identity Configuration
+    // Identity (??????? ?????????)
     builder.Services.AddIdentity();
-    #endregion
     builder.Services.AddPolicy();
+
+    // ? Google Authentication — ?? ?????? ?????? Build() ?? ???
+    builder.Services
+        .AddAuthentication()  // Identity ?????? ????? ??? ??? ????; ???? external provider ??? ????? ??????
+        .AddGoogle(options =>
+        {
+            options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+            options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+            // ?????: options.AuthorizationEndpoint += "?prompt=select_account";
+        });
 
     var app = builder.Build();
 
-    // Configure the HTTP request pipeline
+    // Pipeline
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
@@ -89,24 +92,23 @@ try
     app.UseHttpsRedirection();
     app.UseRouting();
 
-
+    // Order matters
     app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapStaticAssets();
 
     app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        name: "areas",
+        pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
+        .WithStaticAssets();
 
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
         .WithStaticAssets();
 
-    app.MapRazorPages()
-       .WithStaticAssets();
+    app.MapRazorPages().WithStaticAssets();
 
     app.Run();
 
@@ -120,8 +122,5 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-
-
 
 

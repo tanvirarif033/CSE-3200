@@ -58,6 +58,12 @@ namespace CSE3200.Web
             builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
             builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
 
+            // Add these registrations
+            builder.RegisterType<DonationRepository>().As<IDonationRepository>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<DonationService>().As<IDonationService>()
+                .InstancePerLifetimeScope();
 
             base.Load(builder);
         }
