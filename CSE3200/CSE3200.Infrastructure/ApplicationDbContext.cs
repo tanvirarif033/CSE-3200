@@ -24,6 +24,7 @@ namespace CSE3200.Infrastructure
 
         public DbSet<Product> Products { get; set; }
         public DbSet<Disaster> Disasters { get; set; }
+        public DbSet<Donation> Donations { get; set; }
 
         public ApplicationDbContext(string connectionString, string migrationAssembly)
         {
@@ -70,7 +71,30 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(d => d.CreatedBy);
                 entity.HasIndex(d => d.CreatedDate);
             });
+            builder.Entity<Donation>(entity =>
+            {
+                entity.Property(d => d.Amount).HasColumnType("decimal(18,2)");
+                entity.Property(d => d.DonorName).IsRequired().HasMaxLength(200);
+                entity.Property(d => d.DonorEmail).IsRequired().HasMaxLength(100);
+                entity.Property(d => d.DonorPhone).IsRequired().HasMaxLength(20);
+                entity.Property(d => d.PaymentMethod).IsRequired();
+                entity.Property(d => d.DonationDate).IsRequired();
+                entity.Property(d => d.PaymentStatus).HasMaxLength(20);
+                entity.Property(d => d.TransactionId).HasMaxLength(50);
+                entity.Property(d => d.Notes).HasMaxLength(500);
 
+                // Foreign key relationship
+                entity.HasOne(d => d.Disaster)
+                      .WithMany()
+                      .HasForeignKey(d => d.DisasterId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes
+                entity.HasIndex(d => d.DonorUserId);
+                entity.HasIndex(d => d.DisasterId);
+                entity.HasIndex(d => d.DonationDate);
+                entity.HasIndex(d => d.PaymentStatus);
+            });
         }
     }
 }

@@ -1,0 +1,122 @@
+﻿@{
+    ViewData["Title"] = "About Us - Disaster Relief";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary">About Disaster Relief</h1>
+                <p class="lead">Helping communities recover from disasters through immediate response and sustainable support.</p>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="row mb-5">
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="display-3 text-primary">@ViewBag.TotalDisasters</h2>
+                            <p class="text-muted">Disasters Responded To</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="display-3 text-success">@ViewBag.TotalDonations?.ToString("C0")</h2>
+                            <p class="text-muted">Total Donations Raised</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="display-3 text-info">@ViewBag.TotalDonors</h2>
+                            <p class="text-muted">Generous Donors</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mission Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="mb-4">Our Mission</h2>
+                    <p class="fs-5">
+                        Disaster Relief is dedicated to providing immediate assistance and long-term support to communities affected by natural disasters and emergencies.
+                        We believe that every person deserves access to basic necessities and support during times of crisis.
+                    </p>
+                </div>
+            </div>
+
+            <!-- How We Work Section -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="mb-4">How We Work</h2>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <i class="bi bi-lightning-charge-fill display-6 text-warning"></i>
+                                </div>
+                                <div>
+                                    <h4>Immediate Response</h4>
+                                    <p>Quick deployment of resources and aid to affected areas within hours of a disaster.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <i class="bi bi-people-fill display-6 text-primary"></i>
+                                </div>
+                                <div>
+                                    <h4>Community Support</h4>
+                                    <p>Working with local communities to ensure aid reaches those who need it most.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <i class="bi bi-shield-check-fill display-6 text-success"></i>
+                                </div>
+                                <div>
+                                    <h4>Transparency</h4>
+                                    <p>Complete transparency in how donations are used and distributed.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <i class="bi bi-graph-up-arrow display-6 text-info"></i>
+                                </div>
+                                <div>
+                                    <h4>Sustainable Recovery</h4>
+                                    <p>Long-term support for rebuilding and recovery efforts in affected communities.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="row">
+                <div class="col-12 text-center">
+                    <div class="card bg-light border-0">
+                        <div class="card-body py-5">
+                            <h3 class="mb-3">Join Us in Making a Difference</h3>
+                            <p class="mb-4">Your support can help us reach more communities in need.</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="/" class="btn btn-primary btn-lg">Make a Donation</a>
+                                <a href="/Contact" class="btn btn-outline-primary btn-lg">Contact Us</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

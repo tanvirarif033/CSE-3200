@@ -1,0 +1,142 @@
+﻿@model IList<Donation>
+@using CSE3200.Domain.Entities
+@{
+    ViewData["Title"] = "My Donation History";
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .donation-card {
+            border-left: 4px solid #28a745;
+            margin-bottom: 1rem;
+        }
+
+        .donation-status-completed {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .donation-status-pending {
+            color: #ffc107;
+            font-weight: bold;
+        }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">My Donation History</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Donation History</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white text-center">
+                    <div class="card-body">
+                        <h3>@ViewBag.TotalDonations</h3>
+                        <p>Total Donations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white text-center">
+                    <div class="card-body">
+                        <h3>@ViewBag.TotalDonated?.ToString("C")</h3>
+                        <p>Total Amount Donated</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white text-center">
+                    <div class="card-body">
+                        <h3>@Model.Select(d => d.DisasterId).Distinct().Count()</h3>
+                        <p>Disasters Supported</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All My Donations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Disaster</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                    <th>Transaction ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var donation in Model)
+                                {
+                                    <tr>
+                                        <td>@donation.DonationDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td>
+                                            @if (donation.Disaster != null)
+                                            {
+                                                @donation.Disaster.Title
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Unknown Disaster</span>
+                                            }
+                                        </td>
+                                        <td>@donation.Amount.ToString("C")</td>
+                                        <td>@donation.PaymentMethod</td>
+                                        <td>
+                                            <span class="@(donation.PaymentStatus == "Completed" ? "donation-status-completed" : "donation-status-pending")">
+                                                @donation.PaymentStatus
+                                            </span>
+                                        </td>
+                                        <td>@donation.TransactionId</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-heart display-1 text-muted"></i>
+                    <h3 class="mt-3">No Donations Yet</h3>
+                    <p class="text-muted">You haven't made any donations yet.</p>
+                    <a href="/" class="btn btn-primary">Make Your First Donation</a>
+                </div>
+            </div>
+        }
+    </div>
+</div>

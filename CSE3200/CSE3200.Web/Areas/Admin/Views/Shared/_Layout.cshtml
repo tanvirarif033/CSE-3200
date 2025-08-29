@@ -283,9 +283,9 @@
                                 </li>
 
                                 <li class="nav-item">
-                                    <a href="/Admin/Donors" class="nav-link">
+                                    <a href="/Admin/Donations" class="nav-link">
                                         <i class="nav-icon bi bi-person"></i>
-                                        <p>Donor</p>
+                                        <p>Donation</p>
                                     </a>
                                 </li>
                             </ul>
@@ -296,17 +296,23 @@
                                 <p>Post</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="/~" class="nav-link">
+                                <i class="nav-icon bi bi-palette"></i>
+                                <p>Logout</p>
+                            </a>
+                        </li>
 
                         @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
+                                <a class="nav-icon bi bi-person" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
+                                <a class="nav-icon bi bi-person" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
                             </li>
                         }
 
