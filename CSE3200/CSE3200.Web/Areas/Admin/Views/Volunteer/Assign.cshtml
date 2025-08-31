@@ -1,0 +1,74 @@
+﻿@model CSE3200.Web.Areas.Admin.Models.AssignVolunteerModel
+
+@{
+    ViewData["Title"] = "Assign Volunteer";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Assign Volunteer to: @Model.DisasterTitle</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Disasters">Disasters</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Volunteer/Volunteers?disasterId=@Model.DisasterId">Volunteers</a></li>
+                    <li class="breadcrumb-item active">Assign Volunteer</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Assign New Volunteer</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Assign" method="post">
+                    <input type="hidden" asp-for="DisasterId" />
+                    <input type="hidden" asp-for="DisasterTitle" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="VolunteerUserId" class="form-label">Select Volunteer *</label>
+                                <select asp-for="VolunteerUserId" class="form-select" required>
+                                    <option value="">-- Select Volunteer --</option>
+                                    @foreach (var volunteer in Model.AvailableVolunteers)
+                                    {
+                                        <option value="@volunteer.UserId">@volunteer.FullName (@volunteer.Email)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="VolunteerUserId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label asp-for="TaskDescription" class="form-label">Task Description *</label>
+                                <textarea asp-for="TaskDescription" class="form-control" rows="4"
+                                          placeholder="Describe the tasks and responsibilities for this volunteer..."
+                                          maxlength="200" required></textarea>
+                                <span asp-validation-for="TaskDescription" class="text-danger"></span>
+                                <small class="form-text text-muted">Max 200 characters</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Assign Volunteer</button>
+                        <a href="/Admin/Volunteer/Volunteers?disasterId=@Model.DisasterId" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

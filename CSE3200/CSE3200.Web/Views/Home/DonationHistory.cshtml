@@ -1,7 +1,16 @@
 ﻿@model IList<Donation>
 @using CSE3200.Domain.Entities
+@using Microsoft.AspNetCore.Identity
+@using CSE3200.Infrastructure.Identity
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     ViewData["Title"] = "My Donation History";
+
+    // Get the current user's full name
+    var currentUser = await UserManager.GetUserAsync(User);
+    var userFullName = currentUser != null ? $"{currentUser.FirstName} {currentUser.LastName}" : User.Identity.Name;
+    var userEmail = currentUser?.Email;
 }
 
 @section Styles {
@@ -26,6 +35,11 @@
 
         .donation-status-pending {
             color: #ffc107;
+            font-weight: bold;
+        }
+
+        .donation-status-failed {
+            color: #dc3545;
             font-weight: bold;
         }
     </style>
@@ -94,31 +108,62 @@
                                     <th>Payment Method</th>
                                     <th>Status</th>
                                     <th>Transaction ID</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var donation in Model)
+                                @foreach (var donation in Model.OrderByDescending(d => d.DonationDate))
                                 {
                                     <tr>
                                         <td>@donation.DonationDate.ToString("yyyy-MM-dd HH:mm")</td>
                                         <td>
                                             @if (donation.Disaster != null)
                                             {
-                                                @donation.Disaster.Title
+                                                <strong>@donation.Disaster.Title</strong>
+                                                <br>
+                                                <small class="text-muted">@donation.Disaster.Location</small>
                                             }
                                             else
                                             {
                                                 <span class="text-muted">Unknown Disaster</span>
+                                                <br>
+                                                <small class="text-muted">ID: @donation.DisasterId.ToString().Substring(0, 8)...</small>
                                             }
                                         </td>
                                         <td>@donation.Amount.ToString("C")</td>
-                                        <td>@donation.PaymentMethod</td>
                                         <td>
-                                            <span class="@(donation.PaymentStatus == "Completed" ? "donation-status-completed" : "donation-status-pending")">
+                                            <span class="badge bg-secondary">@donation.PaymentMethod</span>
+                                        </td>
+                                        <td>
+                                            @{
+                                                var statusClass = donation.PaymentStatus == "Completed" ? "donation-status-completed" :
+                                                donation.PaymentStatus == "Pending" ? "donation-status-pending" : "donation-status-failed";
+                                            }
+                                            <span class="@statusClass">
                                                 @donation.PaymentStatus
                                             </span>
                                         </td>
-                                        <td>@donation.TransactionId</td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(donation.TransactionId))
+                                            {
+                                                <code>@donation.TransactionId</code>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-info view-details"
+                                                    data-donation-id="@donation.Id"
+                                                    data-donation-amount="@donation.Amount.ToString("C")"
+                                                    data-payment-method="@donation.PaymentMethod"
+                                                    data-status="@donation.PaymentStatus"
+                                                    data-transaction-id="@donation.TransactionId"
+                                                    data-donation-date="@donation.DonationDate.ToString("yyyy-MM-dd HH:mm")">
+                                                <i class="bi bi-eye"></i> Details
+                                            </button>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -134,9 +179,118 @@
                     <i class="bi bi-heart display-1 text-muted"></i>
                     <h3 class="mt-3">No Donations Yet</h3>
                     <p class="text-muted">You haven't made any donations yet.</p>
-                    <a href="/" class="btn btn-primary">Make Your First Donation</a>
+                    <a href="/" class="btn btn-primary">
+                        <i class="bi bi-heart-fill me-1"></i>Make Your First Donation
+                    </a>
                 </div>
             </div>
         }
     </div>
 </div>
+
+<!-- Donation Details Modal -->
+<div class="modal fade" id="donationDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Donation Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donation Date:</label>
+                            <p id="modal-donation-date" class="mb-0"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Amount:</label>
+                            <p id="modal-amount" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Method:</label>
+                            <p id="modal-payment-method" class="mb-0"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status:</label>
+                            <p id="modal-status" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Transaction ID:</label>
+                            <p id="modal-transaction-id" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donor Information:</label>
+                            <p class="mb-1">@userFullName</p>
+                            <p class="mb-0 text-muted">@userEmail</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i>Print Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Donation details modal functionality
+            $('.view-details').on('click', function () {
+                const donationId = $(this).data('donation-id');
+                const amount = $(this).data('donation-amount');
+                const paymentMethod = $(this).data('payment-method');
+                const status = $(this).data('status');
+                const transactionId = $(this).data('transaction-id');
+                const donationDate = $(this).data('donation-date');
+
+                // Populate modal with data
+                $('#modal-donation-date').text(donationDate);
+                $('#modal-amount').text(amount);
+                $('#modal-payment-method').text(paymentMethod);
+                $('#modal-status').html(`<span class="${getStatusClass(status)}">${status}</span>`);
+                $('#modal-transaction-id').text(transactionId || 'N/A');
+
+                // Show modal
+                $('#donationDetailsModal').modal('show');
+            });
+
+            function getStatusClass(status) {
+                switch (status.toLowerCase()) {
+                    case 'completed':
+                        return 'donation-status-completed';
+                    case 'pending':
+                        return 'donation-status-pending';
+                    case 'failed':
+                        return 'donation-status-failed';
+                    default:
+                        return '';
+                }
+            }
+        });
+    </script>
+}

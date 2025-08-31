@@ -14,15 +14,20 @@ namespace CSE3200.Infrastructure
         public ApplicationUnitOfWork(ApplicationDbContext context,
            IProductRepository productRepository,
            IDisasterRepository disasterRepository,
-           IDonationRepository donationRepository) : base(context)
+           IDonationRepository donationRepository,
+           IVolunteerAssignmentRepository volunteerAssignmentRepository) : base(context)
         {
             ProductRepository = productRepository;
             DisasterRepository = disasterRepository;
             DonationRepository = donationRepository;
+            VolunteerAssignmentRepository = volunteerAssignmentRepository;
         }
 
         public IProductRepository ProductRepository { get; private set; }
         public IDisasterRepository DisasterRepository { get; private set; }
         public IDonationRepository DonationRepository { get; private set; }
+        public IVolunteerAssignmentRepository VolunteerAssignmentRepository { get; private set; }
+
+
     }
 }

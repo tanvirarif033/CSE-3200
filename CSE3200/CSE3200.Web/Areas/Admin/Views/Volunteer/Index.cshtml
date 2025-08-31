@@ -1,0 +1,97 @@
+﻿@model IList<VolunteerAssignmentViewModel>
+
+@{
+    ViewData["Title"] = "All Volunteer Assignments";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">All Volunteer Assignments</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin">Admin</a></li>
+                    <li class="breadcrumb-item active">Volunteer Assignments</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        @if (Model.Any())
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">All Volunteer Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Volunteer</th>
+                                    <th>Disaster</th>
+                                    <th>Task Description</th>
+                                    <th>Assigned Date</th>
+                                    <th>Assigned By</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var assignment in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="ms-3">
+                                                    <h6 class="mb-0">@assignment.VolunteerName</h6>
+                                                    <small class="text-muted">@assignment.VolunteerEmail</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@assignment.DisasterTitle</td>
+                                        <td>@assignment.TaskDescription</td>
+                                        <td>@assignment.AssignedDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@assignment.AssignedBy</td>
+                                        <td>
+                                            <span class="badge bg-@(assignment.Status == "Assigned" ? "success" :
+                                                                                                  assignment.Status == "Completed" ? "primary" : "warning")">
+                                        @assignment.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="/Admin/Volunteer/Edit/@assignment.Id" class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                        <a href="/Admin/Volunteer/Delete/@assignment.Id" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                                                        }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-people display-4 text-muted"></i>
+                    <h4 class="mt-3">No Volunteer Assignments</h4>
+                    <p class="text-muted">No volunteers have been assigned to any disasters yet.</p>
+                    <a href="/Admin/Disasters" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> View Disasters to Assign Volunteers
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
