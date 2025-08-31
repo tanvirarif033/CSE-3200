@@ -42,6 +42,7 @@ namespace CSE3200.Domain.Entities
 
         [MaxLength(500)]
         public string? Notes { get; set; }
+       
     }
 
     public enum PaymentMethod

@@ -14,6 +14,7 @@ namespace CSE3200.Domain.Services
         IList<Disaster> GetPendingApprovals();
         IList<Disaster> GetApprovedDisasters();
         IList<Disaster> GetDisastersByUser(string userId);
+
         void ApproveDisaster(Guid id, string approvedBy);
         void RejectDisaster(Guid id, string rejectedBy);
     }

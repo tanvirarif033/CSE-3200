@@ -124,5 +124,6 @@ namespace CSE3200.Application.Services
                 throw new InvalidOperationException("Disaster not found or not in pending approval status");
             }
         }
+
     }
 }

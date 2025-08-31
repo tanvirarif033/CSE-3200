@@ -26,6 +26,10 @@ namespace CSE3200.Infrastructure
         public DbSet<Disaster> Disasters { get; set; }
         public DbSet<Donation> Donations { get; set; }
 
+        public DbSet<VolunteerAssignment> VolunteerAssignments { get; set; }
+
+
+
         public ApplicationDbContext(string connectionString, string migrationAssembly)
         {
             _migrationAssembly = migrationAssembly;
@@ -94,6 +98,25 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(d => d.DisasterId);
                 entity.HasIndex(d => d.DonationDate);
                 entity.HasIndex(d => d.PaymentStatus);
+            });
+
+            builder.Entity<VolunteerAssignment>(entity =>
+            {
+                entity.Property(va => va.TaskDescription).IsRequired().HasMaxLength(200);
+                entity.Property(va => va.Status).IsRequired().HasMaxLength(20);
+                entity.Property(va => va.AssignedBy).IsRequired().HasMaxLength(450);
+                entity.Property(va => va.VolunteerUserId).IsRequired().HasMaxLength(450);
+
+                // Foreign key relationships
+                entity.HasOne(va => va.Disaster)
+                      .WithMany()
+                      .HasForeignKey(va => va.DisasterId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Indexes
+                entity.HasIndex(va => va.DisasterId);
+                entity.HasIndex(va => va.VolunteerUserId);
+                entity.HasIndex(va => va.Status);
             });
         }
     }

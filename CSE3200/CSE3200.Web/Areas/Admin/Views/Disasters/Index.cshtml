@@ -53,6 +53,26 @@
         .badge-rejected {
             background-color: #dc3545;
         }
+
+        .btn-assign {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+            .btn-assign:hover {
+                background-color: #218838;
+                border-color: #1e7e34;
+                color: white;
+            }
+
+            .btn-assign:disabled {
+                background-color: #6c757d;
+                border-color: #6c757d;
+                cursor: not-allowed;
+            }
     </style>
 }
 
@@ -89,7 +109,7 @@
                             <th>Occurred Date</th>
                             <th>Affected People</th>
                             <th>Status</th>
-                            <th style="width: 140px;">Actions</th>
+                            <th style="width: 200px;">Actions</th>
                         </tr>
                     </thead>
                 </table>
@@ -109,7 +129,6 @@
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
-      // Update the DataTables configuration in the Scripts section:
     <script>
         $(document).ready(function () {
             var disastersTable = $('#disasters').DataTable({
@@ -184,7 +203,19 @@
                         name: "Actions",
                         orderable: false,
                         render: function (data, type, row) {
-                            return data;
+                            // Add Assign Volunteer button to approved disasters
+                            var assignButton = '';
+                            if (row.status.toLowerCase() === 'approved') {
+                                assignButton = `<a href="/Admin/Volunteer/Assign?disasterId=${row.id}" class="btn btn-assign btn-sm" title="Assign Volunteers">
+                                    <i class="bi bi-person-plus"></i> Assign
+                                </a> `;
+                            } else {
+                                assignButton = `<button class="btn btn-assign btn-sm" disabled title="Only approved disasters can have volunteers assigned">
+                                    <i class="bi bi-person-plus"></i> Assign
+                                </button> `;
+                            }
+
+                            return assignButton + data;
                         }
                     }
                 ],

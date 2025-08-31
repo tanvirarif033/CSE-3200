@@ -1,14 +1,18 @@
 using CSE3200.Domain;
 using CSE3200.Domain.Entities;
 using CSE3200.Domain.Services;
+using CSE3200.Infrastructure.Identity;
 using CSE3200.Web.Areas.Admin.Models;
 using CSE3200.Web.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace CSE3200.Web.Controllers
 {
@@ -16,15 +20,21 @@ namespace CSE3200.Web.Controllers
     {
         private readonly IDisasterService _disasterService;
         private readonly IDonationService _donationService;
+        private readonly IVolunteerAssignmentService _volunteerService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(
             IDisasterService disasterService,
             IDonationService donationService,
+            IVolunteerAssignmentService volunteerService,
+            UserManager<ApplicationUser> userManager,
             ILogger<HomeController> logger)
         {
             _disasterService = disasterService;
             _donationService = donationService;
+            _volunteerService = volunteerService;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -39,8 +49,10 @@ namespace CSE3200.Web.Controllers
                 int totalDonors = 0;
                 var recentDonations = new List<Donation>();
 
+                // Add volunteer count to each disaster
                 foreach (var disaster in approvedDisasters)
                 {
+                    disaster.VolunteerCount = _volunteerService.GetAssignedVolunteerCount(disaster.Id);
                     totalDonations += _donationService.GetTotalDonationsByDisaster(disaster.Id);
                 }
 
@@ -135,6 +147,7 @@ namespace CSE3200.Web.Controllers
                 return Json(new { success = false, message = "Error processing donation. Please try again." });
             }
         }
+
         [Authorize]
         public IActionResult DonationHistory()
         {
@@ -147,7 +160,19 @@ namespace CSE3200.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                var donations = _donationService.GetDonationsByUser(userId);
+                // Make sure to include the Disaster navigation property
+                var donations = _donationService.GetDonationsByUser(userId)
+                    .OrderByDescending(d => d.DonationDate)
+                    .ToList();
+
+                // If your service doesn't automatically include Disaster, you may need to load it
+                foreach (var donation in donations)
+                {
+                    if (donation.Disaster == null && donation.DisasterId != Guid.Empty)
+                    {
+                        donation.Disaster = _disasterService.GetDisaster(donation.DisasterId);
+                    }
+                }
 
                 ViewBag.TotalDonated = donations
                     .Where(d => d.PaymentStatus == "Completed")
@@ -185,9 +210,18 @@ namespace CSE3200.Web.Controllers
                     .Distinct()
                     .Count();
 
+                // Calculate total volunteers across all disasters
+                int totalVolunteers = 0;
+                var approvedDisasters = _disasterService.GetApprovedDisasters();
+                foreach (var disaster in approvedDisasters)
+                {
+                    totalVolunteers += _volunteerService.GetAssignedVolunteerCount(disaster.Id);
+                }
+
                 ViewBag.TotalDisasters = totalDisasters;
                 ViewBag.TotalDonations = totalDonations;
                 ViewBag.TotalDonors = totalDonors;
+                ViewBag.TotalVolunteers = totalVolunteers;
 
                 return View();
             }
@@ -197,6 +231,7 @@ namespace CSE3200.Web.Controllers
                 ViewBag.TotalDisasters = 0;
                 ViewBag.TotalDonations = 0;
                 ViewBag.TotalDonors = 0;
+                ViewBag.TotalVolunteers = 0;
                 return View();
             }
         }
@@ -223,13 +258,15 @@ namespace CSE3200.Web.Controllers
 
                 var totalDonated = donations.Sum(d => d.Amount);
                 var donorCount = donations.Select(d => d.DonorEmail).Distinct().Count();
+                var volunteerCount = _volunteerService.GetAssignedVolunteerCount(disasterId);
 
                 return Json(new
                 {
                     success = true,
                     totalDonated = totalDonated.ToString("C"),
                     donorCount = donorCount,
-                    donationCount = donations.Count
+                    donationCount = donations.Count,
+                    volunteerCount = volunteerCount
                 });
             }
             catch (Exception ex)
@@ -267,6 +304,169 @@ namespace CSE3200.Web.Controllers
             {
                 _logger.LogError(ex, "Error getting user donation stats");
                 return Json(new { success = false, message = "Error loading donation statistics" });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetDisasterVolunteers(Guid disasterId)
+        {
+            try
+            {
+                var assignments = _volunteerService.GetDisasterAssignments(disasterId);
+                var volunteerCount = assignments.Count;
+
+                return Json(new
+                {
+                    success = true,
+                    volunteerCount = volunteerCount,
+                    assignments = assignments.Select(a => new
+                    {
+                        taskDescription = a.TaskDescription,
+                        assignedDate = a.AssignedDate.ToString("yyyy-MM-dd"),
+                        assignedBy = a.AssignedBy,
+                        status = a.Status
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting disaster volunteers for {DisasterId}", disasterId);
+                return Json(new { success = false, message = "Error loading volunteer information" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDisasterDetails(Guid disasterId)
+        {
+            try
+            {
+                var disaster = _disasterService.GetDisaster(disasterId);
+                if (disaster == null)
+                {
+                    return Json(new { success = false, message = "Disaster not found" });
+                }
+
+                var assignments = _volunteerService.GetDisasterAssignments(disasterId);
+                var volunteerCount = assignments.Count;
+
+                // Get volunteer names for each assignment
+                var volunteersWithNames = new List<object>();
+                foreach (var assignment in assignments)
+                {
+                    // Get user details for the volunteer
+                    var user = await _userManager.FindByIdAsync(assignment.VolunteerUserId);
+                    var volunteerName = user != null ? $"{user.FirstName} {user.LastName}" : "Unknown Volunteer";
+
+                    volunteersWithNames.Add(new
+                    {
+                        taskDescription = assignment.TaskDescription,
+                        assignedDate = assignment.AssignedDate.ToString("yyyy-MM-dd"),
+                        assignedBy = assignment.AssignedBy,
+                        status = assignment.Status,
+                        volunteerName = volunteerName,
+                        volunteerEmail = user?.Email
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    disaster = new
+                    {
+                        title = disaster.Title,
+                        description = disaster.Description,
+                        location = disaster.Location,
+                        occurredDate = disaster.OccurredDate.ToString("yyyy-MM-dd"),
+                        severity = disaster.Severity.ToString(),
+                        affectedPeople = disaster.AffectedPeople,
+                        requiredAssistance = disaster.RequiredAssistance,
+                        volunteerCount = volunteerCount
+                    },
+                    volunteerCount = volunteerCount,
+                    volunteers = volunteersWithNames
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting disaster details for {DisasterId}", disasterId);
+                return Json(new { success = false, message = "Error loading disaster details" });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult GetDisasterStats()
+        {
+            try
+            {
+                var approvedDisasters = _disasterService.GetApprovedDisasters();
+
+                var stats = approvedDisasters.Select(d => new
+                {
+                    id = d.Id,
+                    title = d.Title,
+                    volunteerCount = _volunteerService.GetAssignedVolunteerCount(d.Id),
+                    donationAmount = _donationService.GetTotalDonationsByDisaster(d.Id),
+                    donationCount = _donationService.GetDonationsByDisaster(d.Id)
+                        .Count(d => d.PaymentStatus == "Completed")
+                }).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    stats = stats
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting disaster stats");
+                return Json(new { success = false, message = "Error loading disaster statistics" });
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetUserVolunteerAssignments()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var assignments = _volunteerService.GetVolunteerAssignments(userId);
+                var activeAssignments = assignments.Where(a => a.Status == "Assigned").ToList();
+                var completedAssignments = assignments.Where(a => a.Status == "Completed").ToList();
+
+                // Get disaster details for each assignment
+                var assignmentsWithDetails = new List<object>();
+                foreach (var assignment in assignments)
+                {
+                    var disaster = _disasterService.GetDisaster(assignment.DisasterId);
+                    assignmentsWithDetails.Add(new
+                    {
+                        disasterId = assignment.DisasterId,
+                        disasterTitle = disaster?.Title ?? "Unknown Disaster",
+                        taskDescription = assignment.TaskDescription,
+                        assignedDate = assignment.AssignedDate.ToString("yyyy-MM-dd"),
+                        status = assignment.Status
+                    });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    totalAssignments = assignments.Count,
+                    activeAssignments = activeAssignments.Count,
+                    completedAssignments = completedAssignments.Count,
+                    assignments = assignmentsWithDetails
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user volunteer assignments");
+                return Json(new { success = false, message = "Error loading volunteer assignments" });
             }
         }
     }

@@ -1,7 +1,10 @@
 ﻿using Autofac;
+using Autofac.Core;
 using CSE3200.Application.Features.Disasters.Commands;
 using CSE3200.Application.Features.Disasters.Queries;
 using CSE3200.Application.Features.Products.Commands;
+using CSE3200.Application.Features.Volunteers.Commands;
+using CSE3200.Application.Features.Volunteers.Queries;
 using CSE3200.Application.Services;
 using CSE3200.Domain;
 using CSE3200.Domain.Entities;
@@ -64,6 +67,21 @@ namespace CSE3200.Web
 
             builder.RegisterType<DonationService>().As<IDonationService>()
                 .InstancePerLifetimeScope();
+
+            // Add to WebModule.cs Load method
+            builder.RegisterType<VolunteerAssignmentRepository>().As<IVolunteerAssignmentRepository>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<VolunteerAssignmentService>().As<IVolunteerAssignmentService>()
+                .InstancePerLifetimeScope();
+
+            // Register command handlers
+            builder.RegisterType<AssignVolunteerCommandHandler>().As<IRequestHandler<AssignVolunteerCommand, Guid>>();
+            builder.RegisterType<GetDisasterVolunteersQueryHandler>().As<IRequestHandler<GetDisasterVolunteersQuery, IList<VolunteerAssignment>>>();
+            // Add these lines to your service configuration
+            builder.RegisterType<RemoveVolunteerCommandHandler>().As<IRequestHandler<RemoveVolunteerCommand, bool>>();
+            builder.RegisterType<UpdateVolunteerAssignmentCommandHandler>().As<IRequestHandler<UpdateVolunteerAssignmentCommand, bool>>();
+            builder.RegisterType<GetAllVolunteerAssignmentsQueryHandler>().As<IRequestHandler<GetAllVolunteerAssignmentsQuery, IList<VolunteerAssignment>>>();
 
             base.Load(builder);
         }

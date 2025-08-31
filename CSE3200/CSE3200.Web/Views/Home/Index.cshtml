@@ -92,12 +92,49 @@
                 background-color: #198754 !important;
             }
 
-        .total-donations {
-            background: linear-gradient(45deg, #28a745, #20c997);
+        .details-btn {
+            transition: all 0.3s ease;
+        }
+
+            .details-btn:hover {
+                transform: scale(1.05);
+                background-color: #0dcaf0 !important;
+            }
+
+        .volunteer-badge {
+            background: linear-gradient(45deg, #6f42c1, #5a2d9c);
             color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
+        }
+
+        .donation-badge {
+            background: linear-gradient(45deg, #198754, #0f5132);
+            color: white;
+        }
+
+        .volunteer-stats {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .volunteer-icon {
+            color: #6f42c1;
+            font-size: 1.1rem;
+        }
+
+        .modal-volunteer-table {
+            font-size: 0.9rem;
+        }
+
+            .modal-volunteer-table th {
+                background-color: #f8f9fa;
+                font-weight: 600;
+            }
+
+        .volunteer-email {
+            font-size: 0.8rem;
+            color: #6c757d;
         }
     </style>
 }
@@ -216,6 +253,14 @@
                                         <span class="fw-bold">Affected People:</span>
                                         <span class="badge bg-primary">@disaster.AffectedPeople.ToString("N0")</span>
                                     </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <span class="fw-bold">Volunteers:</span>
+                                        <span class="badge bg-info">@disaster.VolunteerCount Assigned</span>
+                                    </div>
+                                    <div class="volunteer-stats">
+                                        <i class="bi bi-people-fill volunteer-icon"></i>
+                                        <small class="text-muted">@disaster.VolunteerCount volunteers helping</small>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -223,16 +268,22 @@
                                     <p class="text-muted small">@disaster.RequiredAssistance.Truncate(100)</p>
                                 </div>
 
-                                <!-- DONATION BUTTON ADDED HERE -->
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">
                                         <i class="bi bi-clock"></i> @disaster.OccurredDate.Humanize()
                                     </small>
-                                    <button class="btn btn-sm btn-success donate-btn"
-                                            data-disaster-id="@disaster.Id"
-                                            data-disaster-title="@disaster.Title">
-                                        <i class="bi bi-heart-fill me-1"></i> Donate
-                                    </button>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-info details-btn me-1"
+                                                data-disaster-id="@disaster.Id"
+                                                data-disaster-title="@disaster.Title">
+                                            <i class="bi bi-info-circle me-1"></i> Details
+                                        </button>
+                                        <button class="btn btn-sm btn-success donate-btn"
+                                                data-disaster-id="@disaster.Id"
+                                                data-disaster-title="@disaster.Title">
+                                            <i class="bi bi-heart-fill me-1"></i> Donate
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +342,7 @@
     </div>
 </section>
 
-<!-- DONATION MODAL ADDED HERE -->
+<!-- DONATION MODAL -->
 <div class="modal fade" id="donationModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -369,6 +420,31 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Disaster Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="disasterDetails">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading disaster details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -498,6 +574,122 @@
             $('#donationModal').on('hidden.bs.modal', function () {
                 $('#donationForm').removeClass('was-validated');
                 $('#donationResult').addClass('d-none').removeClass('alert-success alert-danger');
+            });
+
+            // DETAILS BUTTON FUNCTIONALITY
+            $('.details-btn').on('click', function () {
+                const disasterId = $(this).data('disaster-id');
+                const disasterTitle = $(this).data('disaster-title');
+
+                $('#detailsModal .modal-title').text('Details: ' + disasterTitle);
+
+                // Show loading state
+                $('#disasterDetails').html(`
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading disaster details...</p>
+                    </div>
+                `);
+
+                $('#detailsModal').modal('show');
+
+                // Load disaster details
+                $.ajax({
+                    url: '/Home/GetDisasterDetails',
+                    type: 'GET',
+                    data: { disasterId: disasterId },
+                    success: function (response) {
+                        if (response.success) {
+                            const disaster = response.disaster;
+                            const volunteers = response.volunteers;
+
+                            let volunteersHtml = '';
+                            if (volunteers.length > 0) {
+                                volunteersHtml = `
+                                    <h5 class="mt-4"><i class="bi bi-people-fill me-2"></i>Volunteer Assignments (${volunteers.length})</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm modal-volunteer-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Volunteer Name</th>
+                                                    <th>Email</th>
+                                                    <th>Task Description</th>
+                                                    <th>Assigned Date</th>
+                                                    <th>Assigned By</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                `;
+
+                                volunteers.forEach(volunteer => {
+                                    volunteersHtml += `
+                                        <tr>
+                                            <td>
+                                                <div>${volunteer.volunteerName || 'Unknown Volunteer'}</div>
+                                              
+                                            </td>
+                                            <td>${volunteer.volunteerEmail || 'N/A'}</td>
+                                            <td>${volunteer.taskDescription}</td>
+                                            <td>${volunteer.assignedDate}</td>
+                                            <td>${volunteer.assignedBy}</td>
+                                            <td><span class="badge bg-${volunteer.status === 'Assigned' ? 'success' :
+                                                volunteer.status === 'Completed' ? 'primary' : 'warning'}">${volunteer.status}</span></td>
+                                        </tr>
+                                    `;
+                                });
+
+                                volunteersHtml += `
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                `;
+                            } else {
+                                volunteersHtml = `
+                                    <div class="alert alert-info mt-4">
+                                        <i class="bi bi-info-circle"></i> No volunteers have been assigned to this disaster yet.
+                                    </div>
+                                `;
+                            }
+
+                            $('#disasterDetails').html(`
+                                <div>
+                                    <h4>${disaster.title}</h4>
+                                    <p><strong>Location:</strong> ${disaster.location}</p>
+                                    <p><strong>Occurred Date:</strong> ${disaster.occurredDate}</p>
+                                    <p><strong>Severity:</strong> <span class="badge bg-${disaster.severity === 'Critical' ? 'danger' :
+                                        disaster.severity === 'High' ? 'warning' :
+                                        disaster.severity === 'Medium' ? 'info' : 'success'}">${disaster.severity}</span></p>
+                                    <p><strong>Affected People:</strong> ${disaster.affectedPeople.toLocaleString()}</p>
+                                    <p><strong>Volunteers Assigned:</strong> <span class="badge volunteer-badge">${disaster.volunteerCount}</span></p>
+
+                                    <h5 class="mt-4">Description</h5>
+                                    <p>${disaster.description}</p>
+
+                                    <h5 class="mt-4">Required Assistance</h5>
+                                    <p>${disaster.requiredAssistance}</p>
+
+                                    ${volunteersHtml}
+                                </div>
+                            `);
+                        } else {
+                            $('#disasterDetails').html(`
+                                <div class="alert alert-danger">
+                                    <i class="bi bi-exclamation-triangle"></i> Error loading disaster details: ${response.message}
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $('#disasterDetails').html(`
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Error loading disaster details. Please try again.
+                            </div>
+                        `);
+                    }
+                });
             });
         });
     </script>
