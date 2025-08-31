@@ -1,0 +1,81 @@
+﻿@model EditVolunteerAssignmentModel
+
+@{
+    ViewData["Title"] = "Edit Volunteer Assignment";
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Edit Volunteer Assignment</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Volunteer">Volunteer Assignments</a></li>
+                    <li class="breadcrumb-item active">Edit Assignment</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Edit Assignment</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Disaster</label>
+                            <input type="text" class="form-control" value="@Model.DisasterTitle" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Volunteer</label>
+                            <input type="text" class="form-control" value="@Model.VolunteerName" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label asp-for="TaskDescription" class="form-label">Task Description *</label>
+                                <textarea asp-for="TaskDescription" class="form-control" rows="4"
+                                          placeholder="Describe the tasks and responsibilities for this volunteer..."
+                                          maxlength="200" required></textarea>
+                                <span asp-validation-for="TaskDescription" class="text-danger"></span>
+                                <small class="form-text text-muted">Max 200 characters</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="Status" class="form-label">Status *</label>
+                                <select asp-for="Status" class="form-select" required>
+                                    <option value="Assigned">Assigned</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                <span asp-validation-for="Status" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Update Assignment</button>
+                        <a href="/Admin/Volunteer" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

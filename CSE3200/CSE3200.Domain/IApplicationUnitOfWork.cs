@@ -13,5 +13,8 @@ namespace CSE3200.Domain
         public IProductRepository ProductRepository { get; }
         public  IDisasterRepository DisasterRepository { get; }
         public IDonationRepository DonationRepository { get; }
+        public IVolunteerAssignmentRepository VolunteerAssignmentRepository { get; }
+
+
     }
 }

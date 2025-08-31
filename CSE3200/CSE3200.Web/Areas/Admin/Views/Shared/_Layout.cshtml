@@ -290,31 +290,46 @@
                                 </li>
                             </ul>
                         </li>
+                        <!-- In your _Layout.cshtml sidebar -->
                         <li class="nav-item">
-                            <a href="/Admin/Sales/Create" class="nav-link">
-                                <i class="nav-icon bi bi-palette"></i>
-                                <p>Post</p>
+                            <a href="/Admin/Volunteer" class="nav-link">
+                                <i class="nav-icon bi bi-person-badge"></i>
+                                <p>Volunteer Assignments</p>
                             </a>
                         </li>
+
+                        <!-- Disasters Section -->
+                        @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
+                        {
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Disasters" asp-action="Index" class="nav-link">
+                                    <i class="nav-icon bi bi-exclamation-triangle"></i>
+                                    <p>Disasters</p>
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Approvals Section (Admin Only) -->
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a asp-area="Admin" asp-controller="Disasters" asp-action="Approvals" class="nav-link">
+                                    <i class="nav-icon bi bi-check-circle"></i>
+                                    <p>Approvals</p>
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Logout Section -->
                         <li class="nav-item">
-                            <a href="/~" class="nav-link">
-                                <i class="nav-icon bi bi-palette"></i>
+                            <a href="/Account/Logout" class="nav-link">
+                                <i class="nav-icon bi bi-box-arrow-right"></i>
                                 <p>Logout</p>
                             </a>
                         </li>
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-icon bi bi-person" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
-                            </li>
-                        }
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-icon bi bi-person" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
-                            </li>
-                        }
+
+
 
 
 
