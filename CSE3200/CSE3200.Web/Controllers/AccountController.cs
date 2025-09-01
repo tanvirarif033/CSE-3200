@@ -217,17 +217,19 @@ namespace CSE3200.Web.Controllers
             return LocalRedirect(returnUrl ?? "/");
         }
 
-        // ===== Logout =====
+        // GET: shows the popup view
         [HttpGet, Authorize]
         public IActionResult Logout() => View();
 
+        // POST: actually logs out
         [HttpPost, ValidateAntiForgeryToken, Authorize]
-        public async Task<IActionResult> LogoutAsync(string returnUrl = null)
+        public async Task<IActionResult> Logout(string returnUrl = null)
         {
             await _signInManager.SignOutAsync();
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-            return LocalRedirect("~/");
+            return LocalRedirect("~/"); // or LocalRedirect(returnUrl ?? "~/");
         }
+
 
         // ===== Access Denied =====
         public IActionResult AccessDenied() => View();
