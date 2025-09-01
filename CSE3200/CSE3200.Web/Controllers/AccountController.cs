@@ -62,10 +62,11 @@ namespace CSE3200.Web.Controllers
                 user.LastName = model.LastName;
 
                 var result = await _userManager.CreateAsync(user, model.Password);
-                await _userManager.AddToRoleAsync(user, "Donor");
 
                 if (result.Succeeded)
                 {
+                    await _userManager.AddToRoleAsync(user, "Donor");
+
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -84,8 +85,9 @@ namespace CSE3200.Web.Controllers
                     }
                     else
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(model.ReturnUrl);
+                        // After successful registration, redirect to login page instead of signing in
+                        TempData["SuccessMessage"] = "Registration successful! Please login with your credentials.";
+                        return RedirectToAction("Login", new { returnUrl = model.ReturnUrl });
                     }
                 }
 
@@ -98,7 +100,7 @@ namespace CSE3200.Web.Controllers
 
         // ===== Username/Password Login =====
         [AllowAnonymous]
-        public async Task<IActionResult> LoginAsync(string returnUrl = null)
+        public async Task<IActionResult> Login(string returnUrl = null)
         {
             var model = new LoginModel();
 
@@ -117,7 +119,7 @@ namespace CSE3200.Web.Controllers
         }
 
         [AllowAnonymous, HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginAsync(LoginModel model)
+        public async Task<IActionResult> Login(LoginModel model)
         {
             model.ReturnUrl ??= Url.Content("~/");
             model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -129,7 +131,10 @@ namespace CSE3200.Web.Controllers
                 model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
 
             if (result.Succeeded)
-                return LocalRedirect(model.ReturnUrl);
+            {
+                // Redirect to homepage instead of admin dashboard
+                return LocalRedirect("~/");
+            }
 
             if (result.RequiresTwoFactor)
                 return RedirectToPage("./LoginWith2fa", new { model.ReturnUrl, model.RememberMe });
@@ -161,14 +166,17 @@ namespace CSE3200.Web.Controllers
         {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
-                return RedirectToAction(nameof(LoginAsync), new { returnUrl });
+                return RedirectToAction(nameof(Login), new { returnUrl });
 
             // If the user already has a login (linked), sign in the user with this external login provider
             var signInResult = await _signInManager.ExternalLoginSignInAsync(
                 info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
 
             if (signInResult.Succeeded)
-                return LocalRedirect(returnUrl ?? "/");
+            {
+                // Redirect to homepage instead of admin dashboard
+                return LocalRedirect("~/");
+            }
 
             // Otherwise, get the email and create/link a local user
             var email = info.Principal.FindFirstValue(ClaimTypes.Email)
@@ -177,7 +185,7 @@ namespace CSE3200.Web.Controllers
             if (string.IsNullOrWhiteSpace(email))
             {
                 TempData["Error"] = "Google did not provide an email address.";
-                return RedirectToAction(nameof(LoginAsync), new { returnUrl });
+                return RedirectToAction(nameof(Login), new { returnUrl });
             }
 
             var user = await _userManager.FindByEmailAsync(email);
@@ -203,7 +211,7 @@ namespace CSE3200.Web.Controllers
                     foreach (var e in create.Errors)
                         ModelState.AddModelError(string.Empty, e.Description);
 
-                    return RedirectToAction(nameof(LoginAsync), new { returnUrl });
+                    return RedirectToAction(nameof(Login), new { returnUrl });
                 }
 
                 // Optional: default role
@@ -214,7 +222,9 @@ namespace CSE3200.Web.Controllers
             var addLogin = await _userManager.AddLoginAsync(user, info);
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            return LocalRedirect(returnUrl ?? "/");
+
+            // Redirect to homepage instead of admin dashboard
+            return LocalRedirect("~/");
         }
 
         // GET: shows the popup view
@@ -229,7 +239,6 @@ namespace CSE3200.Web.Controllers
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
             return LocalRedirect("~/"); // or LocalRedirect(returnUrl ?? "~/");
         }
-
 
         // ===== Access Denied =====
         public IActionResult AccessDenied() => View();
