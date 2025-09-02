@@ -2,16 +2,18 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSE3200.Application.Features.Products.Commands;
 using CSE3200.Infrastructure;
+using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
 using CSE3200.Web.Data;
-using CSE3200.Infrastructure.Extensions;
+using CSE3200.Web.Services;
+
+// ? (optional, but nice to have)
+using Microsoft.AspNetCore.Authentication.Google; // for clarity
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
-// ? (optional, but nice to have)
-using Microsoft.AspNetCore.Authentication.Google; // for clarity
 
 //  Bootstrap Logger
 var configuration = new ConfigurationBuilder()
@@ -75,6 +77,12 @@ try
             options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
             // ?????: options.AuthorizationEndpoint += "?prompt=select_account";
         });
+    // Add HttpClient factory (you already have this, keep it)
+    builder.Services.AddHttpClient();
+
+    // Register Maps Service as a typed client (FIX)
+    builder.Services.AddHttpClient<IMapsService, GoogleMapsService>();
+
 
     var app = builder.Build();
 
