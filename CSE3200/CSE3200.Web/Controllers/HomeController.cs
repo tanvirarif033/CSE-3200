@@ -4,6 +4,7 @@ using CSE3200.Domain.Services;
 using CSE3200.Infrastructure.Identity;
 using CSE3200.Web.Areas.Admin.Models;
 using CSE3200.Web.Models;
+using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,19 +24,22 @@ namespace CSE3200.Web.Controllers
         private readonly IVolunteerAssignmentService _volunteerService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<HomeController> _logger;
+        private readonly IMapsService _mapsService;
 
         public HomeController(
             IDisasterService disasterService,
             IDonationService donationService,
             IVolunteerAssignmentService volunteerService,
             UserManager<ApplicationUser> userManager,
-            ILogger<HomeController> logger)
+            ILogger<HomeController> logger,
+            IMapsService mapsService)
         {
             _disasterService = disasterService;
             _donationService = donationService;
             _volunteerService = volunteerService;
             _userManager = userManager;
             _logger = logger;
+            _mapsService = mapsService;
         }
 
         public IActionResult Index()
@@ -420,6 +424,34 @@ namespace CSE3200.Web.Controllers
             {
                 _logger.LogError(ex, "Error getting disaster stats");
                 return Json(new { success = false, message = "Error loading disaster statistics" });
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetDisasterMap(Guid id)
+        {
+            try
+            {
+                var disaster = _disasterService.GetDisaster(id);
+                if (disaster == null)
+                {
+                    return Json(new { success = false, message = "Disaster not found" });
+                }
+
+                var coordinates = await _mapsService.GetLocationCoordinatesAsync(disaster.Location);
+                var mapUrl = _mapsService.GenerateMapUrl(disaster.Location, coordinates);
+
+                return Json(new
+                {
+                    success = true,
+                    mapUrl = mapUrl,
+                    coordinates = coordinates,
+                    location = disaster.Location
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting map for disaster {DisasterId}", id);
+                return Json(new { success = false, message = "Error loading map" });
             }
         }
 
