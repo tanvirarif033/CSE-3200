@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.2.3-dev-00139" />
+  </ItemGroup>
+
 </Project>
