@@ -28,6 +28,8 @@ namespace CSE3200.Infrastructure
 
         public DbSet<VolunteerAssignment> VolunteerAssignments { get; set; }
 
+        public DbSet<FAQ> FAQs { get; set; }
+
 
 
         public ApplicationDbContext(string connectionString, string migrationAssembly)
@@ -117,6 +119,27 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(va => va.DisasterId);
                 entity.HasIndex(va => va.VolunteerUserId);
                 entity.HasIndex(va => va.Status);
+            });
+
+            builder.Entity<FAQ>(entity =>
+            {
+                entity.Property(f => f.Question).IsRequired().HasMaxLength(200);
+                entity.Property(f => f.Answer).IsRequired();
+                entity.Property(f => f.Category).IsRequired();
+                entity.Property(f => f.DisplayOrder).IsRequired();
+                entity.Property(f => f.IsActive).IsRequired();
+                entity.Property(f => f.CreatedDate).IsRequired();
+                entity.Property(f => f.CreatedBy).IsRequired().HasMaxLength(450);
+
+                // CHANGE THESE LINES - Make ModifiedBy and ModifiedDate optional
+                entity.Property(f => f.ModifiedBy).HasMaxLength(450).IsRequired(false); // ADD .IsRequired(false)
+                entity.Property(f => f.ModifiedDate).IsRequired(false);
+
+                // Add indexes
+                entity.HasIndex(f => f.Category);
+                entity.HasIndex(f => f.IsActive);
+                entity.HasIndex(f => f.DisplayOrder);
+                entity.HasIndex(f => f.CreatedDate);
             });
         }
     }

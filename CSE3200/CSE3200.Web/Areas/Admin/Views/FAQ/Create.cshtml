@@ -1,0 +1,129 @@
+﻿@model AddFAQModel
+@using CSE3200.Domain.Entities
+
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Add FAQ</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/FAQ" class="text-white-50">FAQs</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Add</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New FAQ</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="FAQ" asp-action="Create" method="post" id="faqForm">
+                        <div class="card-body">
+                            <!-- Display success/error messages -->
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    @TempData["SuccessMessage"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            }
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    @TempData["ErrorMessage"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            }
+
+                            <!-- Validation Summary -->
+                            <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Question" class="form-label">Question *</label>
+                                <input type="text" class="form-control" asp-for="Question" placeholder="Enter question" required>
+                                <span asp-validation-for="Question" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Answer" class="form-label">Answer *</label>
+                                <textarea class="form-control" asp-for="Answer" rows="6" placeholder="Enter detailed answer" required></textarea>
+                                <span asp-validation-for="Answer" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Category" class="form-label">Category *</label>
+                                <select class="form-control" asp-for="Category" asp-items="Html.GetEnumSelectList<FAQCategory>()" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="DisplayOrder" class="form-label">Display Order *</label>
+                                <input type="number" class="form-control" asp-for="DisplayOrder" min="0" max="1000" required>
+                                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/FAQ" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Create FAQ</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Enable client-side validation
+            $.validator.setDefaults({
+                ignore: []
+            });
+
+            // Add custom validation if needed
+            $.validator.addMethod('valueNotEquals', function(value, element, arg){
+                return arg !== value;
+            }, 'Please select a valid category.');
+
+            // Form submission handler for debugging
+            $('#faqForm').on('submit', function (e) {
+                console.log('Form submitted');
+
+                // Check if form is valid
+                if (!$(this).valid()) {
+                    console.log('Form is invalid');
+                    e.preventDefault();
+                    return false;
+                }
+
+                console.log('Form is valid, proceeding with submission');
+
+                // Disable submit button to prevent double submission
+                $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...');
+            });
+
+            // Clear validation messages when fields are changed
+            $('input, textarea, select').on('input change', function () {
+                $(this).valid();
+            });
+
+            // Debug: Log form validation status
+            console.log('Form validation initialized:', $('#faqForm').validate().settings);
+        });
+    </script>
+}

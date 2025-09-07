@@ -15,19 +15,21 @@ namespace CSE3200.Infrastructure
            IProductRepository productRepository,
            IDisasterRepository disasterRepository,
            IDonationRepository donationRepository,
-           IVolunteerAssignmentRepository volunteerAssignmentRepository) : base(context)
+           IVolunteerAssignmentRepository volunteerAssignmentRepository,
+           IFAQRepository faqRepository) : base(context)
         {
             ProductRepository = productRepository;
             DisasterRepository = disasterRepository;
             DonationRepository = donationRepository;
             VolunteerAssignmentRepository = volunteerAssignmentRepository;
+            FAQRepository = faqRepository;
         }
 
         public IProductRepository ProductRepository { get; private set; }
         public IDisasterRepository DisasterRepository { get; private set; }
         public IDonationRepository DonationRepository { get; private set; }
         public IVolunteerAssignmentRepository VolunteerAssignmentRepository { get; private set; }
-
+        public IFAQRepository FAQRepository { get; private set; }
 
     }
 }
