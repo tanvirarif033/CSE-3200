@@ -5,157 +5,471 @@
     ViewData["Title"] = "Register";
 }
 
+<!--
+    Disaster Management – Professional Themed Register Page
+    Matches the Login redesign for visual consistency.
+-->
+
 <style>
-    .register-wrapper {
-        display: flex;
+    :root {
+        --bg: #0b1220; /* page bg */
+        --panel: #0f172a; /* right card bg */
+        --panel-2: #0b1530; /* left card bg */
+        --muted: #94a3b8; /* secondary text */
+        --border: #23314d; /* subtle borders */
+        --accent: #f97316; /* safety orange */
+        --accent-2: #ef4444; /* alert red */
+        --accent-3: #22c55e; /* ok green */
+    }
+
+    body {
+        background: radial-gradient(1200px 800px at 10% 5%, #0f1b33 0%, var(--bg) 60%);
+    }
+
+    .register-shell {
         min-height: 100vh;
-        background-color: #0d1117;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+    }
+
+    .register-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 0;
+        width: min(1120px, 100%);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,.45);
+        border: 1px solid #16233b;
+    }
+
+    /* Left Panel */
+    .left {
+        position: relative;
+        padding: 3.25rem 3rem;
+        background: radial-gradient(900px 600px at 20% 10%, #12244b 0%, var(--panel-2) 60%);
         color: white;
     }
 
-    .register-left {
-        flex: 1;
-        background-color: #1e1e58;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 4rem;
-        border-top-left-radius: 12px;
-        border-bottom-left-radius: 12px;
-    }
-
-    .register-left h2 {
-        font-weight: bold;
-    }
-
-    .register-feature {
-        background-color: #2c2c6c;
-        padding: 1rem;
-        border-radius: 10px;
-        margin-top: 1rem;
+    .brand {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: .75rem;
+        margin-bottom: 1.25rem;
     }
 
-    .register-feature i {
-        font-size: 1.5rem;
+        .brand .crest {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #ffedd5, #fde68a);
+            color: #0b1220;
+            font-weight: 800;
+        }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            margin: 0;
+            letter-spacing: .3px
+        }
+
+    .tag {
+        display: inline-flex;
+        gap: .5rem;
+        align-items: center;
+        padding: .35rem .6rem;
+        border-radius: 999px;
+        font-size: .8rem;
+        background: rgba(34,197,94,.14);
+        color: #bbf7d0;
+        border: 1px solid rgba(34,197,94,.35);
     }
 
-    .register-right {
-        flex: 1;
-        background-color: #161b22;
-        padding: 4rem;
-        border-top-right-radius: 12px;
-        border-bottom-right-radius: 12px;
+    .hero {
+        margin: 1.2rem 0 1.4rem;
     }
 
-    .register-right .form-control {
-        background-color: #2d333b;
-        border: none;
-        color: white;
+        .hero h2 {
+            font-weight: 800;
+            line-height: 1.15;
+            margin: 0 0 .5rem;
+            font-size: 2rem;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+    .checklist {
+        display: grid;
+        gap: .8rem;
+        margin-top: 1.25rem;
     }
 
-    .register-right .form-control::placeholder {
-        color: #aaa;
+    .item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: rgba(255,255,255,.03);
+        border: 1px solid var(--border);
+        padding: .85rem 1rem;
+        border-radius: 12px;
+    }
+
+        .item i {
+            font-size: 1.1rem;
+            color: #f8fafc;
+            background: rgba(255,255,255,.06);
+            width: 32px;
+            height: 32px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+        }
+
+        .item strong {
+            display: block;
+        }
+
+        .item small {
+            color: var(--muted);
+        }
+
+    .guides {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: .75rem;
+        margin-top: 1.2rem;
+    }
+
+    .guide {
+        border: 1px dashed rgba(249,115,22,.45);
+        background: linear-gradient(135deg, rgba(249,115,22,.14), rgba(252,211,77,.10));
+        color: #ffedd5;
+        padding: .8rem 1rem;
+        border-radius: 12px;
+        font-size: .92rem;
+    }
+
+    .hotline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, rgba(249,115,22,.15), rgba(252,211,77,.12));
+        border: 1px dashed rgba(249,115,22,.6);
+        padding: .85rem 1rem;
+        border-radius: 12px;
+        margin-top: 1.25rem;
+    }
+
+        .hotline .number {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: .8px;
+            color: #ffedd5;
+        }
+
+    /* Right Panel */
+    .right {
+        background: linear-gradient(180deg, var(--panel), #0d1426);
+        padding: 3rem;
+        color: #e5e7eb;
+        position: relative;
+    }
+
+        .right header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+            .right header .sys {
+                font-size: .82rem;
+                color: var(--muted);
+            }
+
+    .form-wrap {
+        background: rgba(255,255,255,.03);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 1.2rem;
+    }
+
+        .form-wrap h3 {
+            margin: 0 0 .25rem;
+            font-weight: 800;
+        }
+
+        .form-wrap p {
+            margin: 0 0 .9rem;
+            color: var(--muted);
+        }
+
+    .form-control {
+        background: #0b1220;
+        border: 1px solid #1e293b;
+        color: #e5e7eb;
+    }
+
+        .form-control::placeholder {
+            color: #96a3b8;
+        }
+
+    .form-label {
+        font-weight: 600;
     }
 
     .btn-register {
-        background-color: #2c2c6c;
+        background: linear-gradient(180deg, #f97316, #ea580c);
         border: none;
         color: white;
-        font-weight: bold;
+        font-weight: 800;
+        padding: .7rem 1rem;
+        border-radius: 10px;
     }
 
-    .btn-register:hover {
-        background-color: #3f3f8f;
+        .btn-register:hover {
+            filter: brightness(1.05);
+        }
+
+    .policy {
+        font-size: .86rem;
+        color: var(--muted);
     }
 
-    a {
-        color: #58a6ff;
+        .policy a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+            .policy a:hover {
+                text-decoration: underline;
+            }
+
+    .or {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        margin: 1rem 0;
+        color: #9aa4af;
+    }
+
+        .or hr {
+            flex: 1;
+            border-color: #253149;
+            opacity: .7;
+        }
+
+    .btn-google {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        border: 1px solid #30363d;
+        background: #121826;
+        color: white;
+        padding: .6rem 1rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+        .btn-google:hover {
+            background: #192136;
+        }
+
+    .g-logo {
+        width: 20px;
+        height: 20px;
+    }
+
+    .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: .8rem;
+        color: var(--muted);
+        font-size: .85rem;
+        margin-top: 1rem;
+    }
+
+        .foot a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+            .foot a:hover {
+                text-decoration: underline;
+            }
+
+    @@media (max-width: 980px) {
+        .register-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .right {
+            padding: 2rem;
+        }
+
+        .left {
+            padding: 2.25rem 1.5rem;
+        }
+
+        .guides {
+            grid-template-columns: 1fr;
+        }
+    }
+
     }
 </style>
 
-<div class="container-fluid register-wrapper">
-    <!-- Left panel -->
-    <div class="register-left">
-        <div class="text-center mb-4">
-            <i class="bi bi-person-plus" style="font-size: 3rem;"></i>
-            <h2 class="mt-3">Join Our Website Today!</h2>
-            <p>Start your learning journey with us</p>
-        </div>
-
-        <div class="register-feature">
-            <i class="bi bi-journal-check"></i>
-            <div>
-                <strong>Personalized Courses</strong><br />
-                <small>Tailored learning paths just for you</small>
-            </div>
-        </div>
-
-        <div class="register-feature">
-            <i class="bi bi-chat-dots"></i>
-            <div>
-                <strong>Interactive Community</strong><br />
-                <small>Ask questions, get answers</small>
-            </div>
-        </div>
-
-        <div class="register-feature">
-            <i class="bi bi-bar-chart-line"></i>
-            <div>
-                <strong>Growth Tracking</strong><br />
-                <small>Measure your progress every day</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right panel -->
-    <div class="register-right">
-        <h3 class="mb-3">Create Your Account</h3>
-        <p>Please fill in your details to register</p>
-
-        <form id="registerForm" asp-route-returnUrl="/Admin/Dashboard" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-
-            <div class="mb-3">
-                <label asp-for="FirstName" class="form-label">First Name</label>
-                <input asp-for="FirstName" class="form-control" placeholder="Enter your first name" autocomplete="given-name" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
+<div class="register-shell">
+    <div class="register-grid" role="main">
+        <!-- LEFT: Context / Trust / Onboarding Benefits -->
+        <section class="left" aria-label="Disaster portal context">
+            <div class="brand" aria-label="Brand">
+                <div class="crest" aria-hidden="true">DM</div>
+                <div>
+                    <div class="tag"><i class="bi bi-shield-exclamation"></i> Govt • Trusted</div>
+                    <h1 class="mt-1">National Disaster Response Portal</h1>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="LastName" class="form-label">Last Name</label>
-                <input asp-for="LastName" class="form-control" placeholder="Enter your last name" autocomplete="family-name" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
+            <div class="hero">
+                <h2>Create your responder account</h2>
+                <p>Access early warnings, shelter maps, logistics tools, and coordination dashboards.</p>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label">Email Address</label>
-                <input asp-for="Email" class="form-control" placeholder="Enter your email" autocomplete="email" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+            <div class="checklist" aria-label="Key benefits">
+                <div class="item">
+                    <i class="bi bi-radar"></i>
+                    <div>
+                        <strong>Real‑time Alerts</strong>
+                        <small>Get incident notifications by region & role</small>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="bi bi-geo"></i>
+                    <div>
+                        <strong>Field Ops</strong>
+                        <small>Assign teams, track routes, confirm deliveries</small>
+                    </div>
+                </div>
+                <div class="item">
+                    <i class="bi bi-lock"></i>
+                    <div>
+                        <strong>Secure Access</strong>
+                        <small>Government‑grade security and audits</small>
+                    </div>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label">Password</label>
-                <input asp-for="Password" class="form-control" type="password" placeholder="Create a password" autocomplete="new-password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+            <div class="guides" aria-label="Quick guides">
+                <div class="guide"><i class="bi bi-journal-text"></i> Read SOPs before your first deployment.</div>
+                <div class="guide"><i class="bi bi-shield-lock"></i> Use official email. Personal emails may be restricted.</div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
-                <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Re-enter password" autocomplete="new-password" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            <div class="hotline" aria-label="Emergency hotline">
+                <div class="number"><i class="bi bi-telephone-outbound"></i> 999 • 24/7 Emergency</div>
+                <div><a class="policy" href="#">Data & Privacy</a></div>
+            </div>
+        </section>
+
+        <!-- RIGHT: Register Form -->
+        <section class="right" aria-label="Registration panel">
+            <header>
+                <div class="sys">Restricted Access · Authorized personnel only</div>
+                <div class="sys"><i class="bi bi-translate"></i> <a href="#">বাংলা</a> · <a href="#">EN</a></div>
+            </header>
+
+            <div class="form-wrap">
+                <h3 class="mb-1">Create your account</h3>
+                <p>Fill the details below. Use your official email. Password must meet security policy.</p>
+
+                <form id="registerForm" asp-route-returnUrl="/Admin/Dashboard" method="post" aria-label="Register form">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label asp-for="FirstName" class="form-label">First Name</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="First name" autocomplete="given-name" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="LastName" class="form-label">Last Name</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Last name" autocomplete="family-name" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label asp-for="Email" class="form-label">Email Address</label>
+                        <input asp-for="Email" class="form-control" placeholder="name@example.gov" autocomplete="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-sm-6">
+                            <label asp-for="Password" class="form-label">Password</label>
+                            <input asp-for="Password" class="form-control" type="password" placeholder="Create a password" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Re-enter password" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" value="true" id="policyAgree" required>
+                        <label class="form-check-label policy" for="policyAgree">
+                            I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a> and confirm I am authorized to register.
+                        </label>
+                    </div>
+
+                    <div class="d-grid mt-3 mb-2">
+                        <button type="submit" class="btn btn-register"><i class="bi bi-person-plus"></i> Register</button>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="policy">Already have an account? <a asp-action="Login">Sign in</a></small>
+                        <small class="policy">Need help? <a href="#">Support</a></small>
+                    </div>
+                </form>
+
+                <div class="or"><hr><span>or</span><hr></div>
+
+                <!-- Optional Google sign-up (same ExternalLogin action) -->
+                <form asp-controller="Account" asp-action="ExternalLogin" method="post" class="text-center" aria-label="Google sign up">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="/Admin/Dashboard" />
+                    <button type="submit" name="provider" value="Google" class="btn-google">
+                        <svg class="g-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true">
+                            <path fill="#EA4335" d="M24 9.5c3.9 0 6.6 1.7 8.1 3.1l6-6C34.5 3.5 29.7 1 24 1 14.9 1 7.2 6.6 3.6 14.4l7 5.4C12.3 14.5 17.6 9.5 24 9.5z" />
+                            <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.5-2.1 4.6-4.3 6.1l6.6 5.1c3.9-3.6 6.2-8.9 6.2-15.7z" />
+                            <path fill="#FBBC05" d="M10.6 28.8c-.5-1.5-.8-3-.8-4.8s.3-3.3.8-4.8l-7-5.4C2.6 17 2 20.4 2 24s.6 7 1.6 10.2l7-5.4z" />
+                            <path fill="#34A853" d="M24 47c5.7 0 10.5-1.9 14-5.2l-6.6-5.1c-1.8 1.2-4.2 2-7.4 2-6.4 0-11.7-5-13.6-11.6l-7 5.4C7.2 41.4 14.9 47 24 47z" />
+                        </svg>
+                        Continue with Google
+                    </button>
+                </form>
             </div>
 
-            <div class="d-grid mb-3">
-                <button type="submit" class="btn btn-register">Register</button>
+            <div class="foot">
+                <div>© @DateTime.UtcNow.Year Disaster Management Authority</div>
+                <div>
+                    <a href="#">Privacy</a> • <a href="#">Terms</a> • <a href="#">Support</a>
+                </div>
             </div>
-
-            <div class="text-center">
-                Already have an account? <a asp-action="Login">Log in here</a>
-            </div>
-        </form>
+        </section>
     </div>
 </div>
 
