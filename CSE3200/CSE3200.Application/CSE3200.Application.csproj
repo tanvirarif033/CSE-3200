@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="MediatR" Version="13.0.0" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.7" />
+    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="8.2.3-dev-00139" />
   </ItemGroup>
 
   <ItemGroup>
