@@ -115,6 +115,11 @@ try
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
         .WithStaticAssets();
+    // Add public FAQ route
+    app.MapControllerRoute(
+        name: "faq",
+        pattern: "faq",
+        defaults: new { controller = "PublicFAQ", action = "Index" });
 
     app.MapRazorPages().WithStaticAssets();
 
