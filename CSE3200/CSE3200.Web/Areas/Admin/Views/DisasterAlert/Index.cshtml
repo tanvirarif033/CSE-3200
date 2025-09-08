@@ -1,0 +1,291 @@
+﻿@{
+    ViewData["Title"] = "Disaster Alerts Management";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .badge-critical {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-high {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .badge-medium {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .badge-low {
+            background-color: #198754;
+            color: white;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dataTables_wrapper {
+            padding: 0 0.5rem;
+        }
+    </style>
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="app-content-header">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h3 class="mb-0">Disaster Alerts Management</h3>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                        <li class="breadcrumb-item active text-white" aria-current="page">Disaster Alerts</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="app-content">
+        <div class="container-fluid">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Disaster Alerts</h5>
+                    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Alert</a>
+                </div>
+                <div class="card-body">
+                    <!-- Anti-Forgery Token -->
+                    @Html.AntiForgeryToken()
+
+                    <div class="table-responsive">
+                        <table id="alerts" class="table table-striped table-hover table-bordered nowrap" style="width:100%">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Severity</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Order</th>
+                                    <th>Created Date</th>
+                                    <th style="width: 200px;">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- ADD jQuery FIRST -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var alertsTable = $('#alerts').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                lengthChange: true,
+                autoWidth: false,
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                ajax: {
+                    url: "/Admin/DisasterAlert/GetAlertsJson",
+                    type: "POST",
+                    contentType: "application/json",
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    data: function (d) {
+                        // Convert DataTables parameters to match your server-side model
+                        var model = {
+                            Draw: d.draw,
+                            Start: d.start,
+                            Length: d.length,
+                            SearchValue: d.search.value,
+                            Order: d.order
+                        };
+                        return JSON.stringify(model);
+                    },
+                    dataSrc: function (json) {
+                        // Check if the response is valid
+                        if (json && json.data) {
+                            return json.data;
+                        }
+                        console.error("Invalid response format:", json);
+                        return [];
+                    }
+                },
+                columns: [
+                    {
+                        data: "title",
+                        name: "Title"
+                    },
+                    {
+                        data: "severity",
+                        name: "Severity",
+                        render: function(data, type, row) {
+                            if (!data) return 'N/A';
+
+                            var badgeClass = '';
+                            switch(data.toLowerCase()) {
+                                case 'critical': badgeClass = 'badge-critical'; break;
+                                case 'high': badgeClass = 'badge-high'; break;
+                                case 'medium': badgeClass = 'badge-medium'; break;
+                                case 'low': badgeClass = 'badge-low'; break;
+                                default: badgeClass = 'badge-secondary';
+                            }
+
+                            return `<span class="badge ${badgeClass}">${data}</span>`;
+                        }
+                    },
+                    {
+                        data: "startDate",
+                        name: "StartDate",
+                        render: function(data) {
+                            return data ? new Date(data).toLocaleString() : 'N/A';
+                        }
+                    },
+                    {
+                        data: "endDate",
+                        name: "EndDate",
+                        render: function(data) {
+                            return data ? new Date(data).toLocaleString() : 'N/A';
+                        }
+                    },
+                    {
+                        data: "isActive",
+                        name: "IsActive",
+                        render: function(data) {
+                            return data ?
+                                '<span class="badge bg-success">Active</span>' :
+                                '<span class="badge bg-secondary">Inactive</span>';
+                        }
+                    },
+                    {
+                        data: "displayOrder",
+                        name: "DisplayOrder"
+                    },
+                    {
+                        data: "createdDate",
+                        name: "CreatedDate",
+                        render: function(data) {
+                            return data ? new Date(data).toLocaleDateString() : 'N/A';
+                        }
+                    },
+                    {
+                        data: "id",
+                        name: "Actions",
+                        orderable: false,
+                        render: function(data, type, row) {
+                            if (!data) return 'N/A';
+
+                            return `
+                                <a href="/Admin/DisasterAlert/Edit/${data}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="bi bi-pencil-square"></i> Edit
+                                </a>
+                                <button onclick="toggleAlertStatus('${data}')" class="btn btn-sm btn-outline-${row.isActive ? 'warning' : 'success'} me-1">
+                                    <i class="bi bi-power"></i> ${row.isActive ? 'Deactivate' : 'Activate'}
+                                </button>
+                                <button onclick="confirmDelete('${data}')" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                error: function(xhr, error, thrown) {
+                    console.error("AJAX error:", xhr, error, thrown);
+                    toastr.error('Failed to load disaster alerts data. Please try again.');
+                }
+            });
+
+            // Show success/error messages
+            @if (TempData["SuccessMessage"] != null)
+            {
+                    <text>toastr.success('@Html.Raw(TempData["SuccessMessage"])');</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                    <text>toastr.error('@Html.Raw(TempData["ErrorMessage"])');</text>
+            }
+        });
+
+        function toggleAlertStatus(id) {
+            if (confirm('Are you sure you want to change the status of this alert?')) {
+                // Use AJAX with anti-forgery token
+                $.ajax({
+                    url: '/Admin/DisasterAlert/ToggleStatus',
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response && response.success) {
+                            toastr.success(response.message || 'Status updated successfully');
+                            $('#alerts').DataTable().ajax.reload(null, false);
+                        } else {
+                            toastr.error(response.message || 'Failed to update status');
+                        }
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error("Toggle status error:", xhr, error, thrown);
+                        toastr.error('Error updating alert status');
+                    }
+                });
+            }
+        }
+
+        function confirmDelete(id) {
+            if (confirm('Are you sure you want to delete this alert? This action cannot be undone.')) {
+                // Use AJAX with anti-forgery token
+                $.ajax({
+                    url: '/Admin/DisasterAlert/Delete',
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response && response.success) {
+                            toastr.success(response.message || 'Alert deleted successfully');
+                            $('#alerts').DataTable().ajax.reload(null, false);
+                        } else {
+                            toastr.error(response.message || 'Failed to delete alert');
+                        }
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error("Delete error:", xhr, error, thrown);
+                        toastr.error('Error deleting alert');
+                    }
+                });
+            }
+        }
+    </script>
+}

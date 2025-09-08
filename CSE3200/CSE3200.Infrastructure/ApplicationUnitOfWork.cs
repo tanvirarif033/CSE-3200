@@ -1,5 +1,6 @@
 ﻿using CSE3200.Domain;
 using CSE3200.Domain.Repositories;
+using CSE3200.Domain.Services;
 using CSE3200.Infrastructure.Repositories;
 using System;
 using System.Collections.Generic;
@@ -16,13 +17,15 @@ namespace CSE3200.Infrastructure
            IDisasterRepository disasterRepository,
            IDonationRepository donationRepository,
            IVolunteerAssignmentRepository volunteerAssignmentRepository,
-           IFAQRepository faqRepository) : base(context)
+           IFAQRepository faqRepository,
+           IDisasterAlertRepository disasterAlertRepository) : base(context)
         {
             ProductRepository = productRepository;
             DisasterRepository = disasterRepository;
             DonationRepository = donationRepository;
             VolunteerAssignmentRepository = volunteerAssignmentRepository;
             FAQRepository = faqRepository;
+            DisasterAlertRepository = disasterAlertRepository;
         }
 
         public IProductRepository ProductRepository { get; private set; }
@@ -30,6 +33,7 @@ namespace CSE3200.Infrastructure
         public IDonationRepository DonationRepository { get; private set; }
         public IVolunteerAssignmentRepository VolunteerAssignmentRepository { get; private set; }
         public IFAQRepository FAQRepository { get; private set; }
+        public IDisasterAlertRepository DisasterAlertRepository { get; private set; }
 
     }
 }
