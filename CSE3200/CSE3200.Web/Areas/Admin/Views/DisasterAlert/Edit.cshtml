@@ -1,0 +1,161 @@
+﻿@model EditDisasterAlertModel
+@using CSE3200.Domain.Entities
+
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Edit Disaster Alert</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/DisasterAlert" class="text-white-50">Disaster Alerts</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Edit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Edit Disaster Alert</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="DisasterAlert" asp-action="Edit" method="post" id="alertForm">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="card-body">
+                            <!-- Display success/error messages -->
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    @TempData["SuccessMessage"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            }
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    @TempData["ErrorMessage"]
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            }
+
+                            <!-- Validation Summary -->
+                            <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">Title *</label>
+                                <input type="text" class="form-control" asp-for="Title" placeholder="Enter alert title" required>
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Message" class="form-label">Message *</label>
+                                <textarea class="form-control" asp-for="Message" rows="4" placeholder="Enter alert message" required maxlength="500"></textarea>
+                                <span asp-validation-for="Message" class="text-danger small"></span>
+                                <div class="form-text">Maximum 500 characters</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Severity" class="form-label">Severity *</label>
+                                <select class="form-control" asp-for="Severity" asp-items="Html.GetEnumSelectList<AlertSeverity>()" required>
+                                    <option value="">Select Severity</option>
+                                </select>
+                                <span asp-validation-for="Severity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="StartDate" class="form-label">Start Date</label>
+                                        <input type="datetime-local" class="form-control" asp-for="StartDate">
+                                        <span asp-validation-for="StartDate" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="EndDate" class="form-label">End Date (Optional)</label>
+                                        <input type="datetime-local" class="form-control" asp-for="EndDate">
+                                        <span asp-validation-for="EndDate" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="DisplayOrder" class="form-label">Display Order *</label>
+                                <input type="number" class="form-control" asp-for="DisplayOrder" min="0" max="1000" required>
+                                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                                <div class="form-text">Determines the order of alerts (lower numbers appear first)</div>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/DisasterAlert" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Update Alert</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Enable client-side validation
+            $.validator.setDefaults({
+                ignore: []
+            });
+
+            // Add custom validation if needed
+            $.validator.addMethod('valueNotEquals', function(value, element, arg){
+                return arg !== value;
+            }, 'Please select a valid severity level.');
+
+            // Form submission handler
+            $('#alertForm').on('submit', function (e) {
+                console.log('Form submitted');
+
+                // Check if form is valid
+                if (!$(this).valid()) {
+                    console.log('Form is invalid');
+                    e.preventDefault();
+                    return false;
+                }
+
+                console.log('Form is valid, proceeding with submission');
+
+                // Disable submit button to prevent double submission
+                $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
+            });
+
+            // Clear validation messages when fields are changed
+            $('input, textarea, select').on('input change', function () {
+                $(this).valid();
+            });
+
+            // Character counter for message
+            $('#Message').on('input', function() {
+                var length = $(this).val().length;
+                var maxLength = 500;
+                if (length > maxLength) {
+                    $(this).val($(this).val().substring(0, maxLength));
+                    length = maxLength;
+                }
+                $('#charCount').text(length + '/' + maxLength);
+            });
+
+            // Initialize character count
+            var initialLength = $('#Message').val().length;
+            $('#Message').after('<div class="form-text text-end" id="charCount">' + initialLength + '/500</div>');
+        });
+    </script>
+}

@@ -30,6 +30,8 @@ namespace CSE3200.Infrastructure
 
         public DbSet<FAQ> FAQs { get; set; }
 
+        public DbSet<DisasterAlert> DisasterAlerts { get; set; }
+
 
 
         public ApplicationDbContext(string connectionString, string migrationAssembly)
@@ -140,6 +142,24 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(f => f.IsActive);
                 entity.HasIndex(f => f.DisplayOrder);
                 entity.HasIndex(f => f.CreatedDate);
+            });
+
+            builder.Entity<DisasterAlert>(entity =>
+            {
+                entity.Property(a => a.Title).IsRequired().HasMaxLength(200);
+                entity.Property(a => a.Message).IsRequired().HasMaxLength(500);
+                entity.Property(a => a.Severity).IsRequired();
+                entity.Property(a => a.IsActive).IsRequired();
+                entity.Property(a => a.DisplayOrder).IsRequired();
+                entity.Property(a => a.CreatedDate).IsRequired();
+                entity.Property(a => a.CreatedBy).IsRequired().HasMaxLength(450);
+                entity.Property(a => a.ModifiedBy).HasMaxLength(450);
+
+                entity.HasIndex(a => a.Severity);
+                entity.HasIndex(a => a.IsActive);
+                entity.HasIndex(a => a.StartDate);
+                entity.HasIndex(a => a.EndDate);
+                entity.HasIndex(a => a.DisplayOrder);
             });
         }
     }

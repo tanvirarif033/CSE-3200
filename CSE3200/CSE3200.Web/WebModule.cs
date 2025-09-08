@@ -1,5 +1,7 @@
 ﻿using Autofac;
 using Autofac.Core;
+using CSE3200.Application.Features.DisasterAlerts.Commands;
+using CSE3200.Application.Features.DisasterAlerts.Queries;
 using CSE3200.Application.Features.Disasters.Commands;
 using CSE3200.Application.Features.Disasters.Queries;
 using CSE3200.Application.Features.FAQs.Commands;
@@ -47,6 +49,7 @@ namespace CSE3200.Web
                 .InstancePerLifetimeScope();
             builder.RegisterType<FAQRepository>().As<IFAQRepository>()
                 .InstancePerLifetimeScope();
+            builder.RegisterType<DisasterAlertRepository>().As<IDisasterAlertRepository>().InstancePerLifetimeScope();
 
             // Register Unit of Work
             builder.RegisterType<ApplicationUnitOfWork>().As<IApplicationUnitOfWork>()
@@ -63,6 +66,7 @@ namespace CSE3200.Web
                 .InstancePerLifetimeScope();
             builder.RegisterType<FAQService>().As<IFAQService>()
                 .InstancePerLifetimeScope();
+            builder.RegisterType<DisasterAlertService>().As<IDisasterAlertService>().InstancePerLifetimeScope();
 
             // Register command handlers
             builder.RegisterType<AddProductCommandHandler>().AsSelf();
@@ -86,6 +90,11 @@ namespace CSE3200.Web
             builder.RegisterType<UpdateVolunteerAssignmentCommandHandler>().As<IRequestHandler<UpdateVolunteerAssignmentCommand, bool>>();
             builder.RegisterType<GetAllVolunteerAssignmentsQueryHandler>().As<IRequestHandler<GetAllVolunteerAssignmentsQuery, IList<VolunteerAssignment>>>();
 
+            // Disaster Alert command handlers
+            builder.RegisterType<AddDisasterAlertCommandHandler>().As<IRequestHandler<AddDisasterAlertCommand, Guid>>();
+            builder.RegisterType<UpdateDisasterAlertCommandHandler>().As<IRequestHandler<UpdateDisasterAlertCommand, bool>>();
+            builder.RegisterType<ToggleDisasterAlertStatusCommandHandler>().As<IRequestHandler<ToggleDisasterAlertStatusCommand, bool>>();
+            builder.RegisterType<GetDisasterAlertsQueryHandler>().As<IRequestHandler<GetDisasterAlertsQuery, IList<DisasterAlert>>>();
             base.Load(builder);
         }
     }
