@@ -74,6 +74,9 @@
                     <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Alert</a>
                 </div>
                 <div class="card-body">
+                    <!-- Anti-Forgery Token -->
+                    @Html.AntiForgeryToken()
+
                     <div class="table-responsive">
                         <table id="alerts" class="table table-striped table-hover table-bordered nowrap" style="width:100%">
                             <thead class="table-light">
@@ -112,72 +115,71 @@
                 autoWidth: false,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
                 ajax: {
-                        url: "/Admin/DisasterAlert/GetAlertsJson",
-        type: "POST",
-        contentType: "application/json",
-        dataType: "json", // Added comma here
-        data: function (d) {
-            return JSON.stringify({
-                draw: d.draw,
-                pageIndex: d.start / d.length,
-                pageSize: d.length,
-                search: d.search.value,
-                sortExpression: "", // You might want to implement sorting
-                sortDirection: d.order.length > 0 ? d.order[0].dir : "asc"
-            });
-        },
-        error: function(xhr, error, thrown) {
-            console.error("AJAX error:", xhr, error, thrown);
-            toastr.error('Failed to load disaster alerts data. Please try again.');
-        }
+                    url: "/Admin/DisasterAlert/GetAlertsJson",
+                    type: "POST",
+                    contentType: "application/json",
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    data: function (d) {
+                        // Convert DataTables parameters to match your server-side model
+                        var model = {
+                            Draw: d.draw,
+                            Start: d.start,
+                            Length: d.length,
+                            SearchValue: d.search.value,
+                            Order: d.order
+                        };
+                        return JSON.stringify(model);
+                    },
+                    dataSrc: function (json) {
+                        // Check if the response is valid
+                        if (json && json.data) {
+                            return json.data;
+                        }
+                        console.error("Invalid response format:", json);
+                        return [];
+                    }
                 },
                 columns: [
-                    { data: "Title", name: "Title" },
                     {
-                        data: "Severity",
+                        data: "title",
+                        name: "Title"
+                    },
+                    {
+                        data: "severity",
                         name: "Severity",
-                        render: function(data) {
-                            if (data === null || data === undefined) return 'N/A';
+                        render: function(data, type, row) {
+                            if (!data) return 'N/A';
 
-                            // Handle both string and numeric severity values
-                            var severityValue = data;
-                            if (typeof data === 'number') {
-                                // Convert numeric severity to text if needed
-                                const severityMap = {
-                                    0: 'low',
-                                    1: 'medium',
-                                    2: 'high',
-                                    3: 'critical'
-                                };
-                                severityValue = severityMap[data] || 'unknown';
-                            }
-
-                            var badgeClass = 'badge-secondary';
-                            switch(severityValue.toString().toLowerCase()) {
+                            var badgeClass = '';
+                            switch(data.toLowerCase()) {
                                 case 'critical': badgeClass = 'badge-critical'; break;
                                 case 'high': badgeClass = 'badge-high'; break;
                                 case 'medium': badgeClass = 'badge-medium'; break;
                                 case 'low': badgeClass = 'badge-low'; break;
+                                default: badgeClass = 'badge-secondary';
                             }
-                            return `<span class="badge ${badgeClass}">${severityValue}</span>`;
+
+                            return `<span class="badge ${badgeClass}">${data}</span>`;
                         }
                     },
                     {
-                        data: "StartDate",
+                        data: "startDate",
                         name: "StartDate",
                         render: function(data) {
                             return data ? new Date(data).toLocaleString() : 'N/A';
                         }
                     },
                     {
-                        data: "EndDate",
+                        data: "endDate",
                         name: "EndDate",
                         render: function(data) {
                             return data ? new Date(data).toLocaleString() : 'N/A';
                         }
                     },
                     {
-                        data: "IsActive",
+                        data: "isActive",
                         name: "IsActive",
                         render: function(data) {
                             return data ?
@@ -185,16 +187,19 @@
                                 '<span class="badge bg-secondary">Inactive</span>';
                         }
                     },
-                    { data: "DisplayOrder", name: "DisplayOrder" },
                     {
-                        data: "CreateDate",
-                        name: "CreateDate",
+                        data: "displayOrder",
+                        name: "DisplayOrder"
+                    },
+                    {
+                        data: "createdDate",
+                        name: "CreatedDate",
                         render: function(data) {
                             return data ? new Date(data).toLocaleDateString() : 'N/A';
                         }
                     },
                     {
-                        data: "Id",
+                        data: "id",
                         name: "Actions",
                         orderable: false,
                         render: function(data, type, row) {
@@ -204,8 +209,8 @@
                                 <a href="/Admin/DisasterAlert/Edit/${data}" class="btn btn-sm btn-outline-primary me-1">
                                     <i class="bi bi-pencil-square"></i> Edit
                                 </a>
-                                <button onclick="toggleAlertStatus('${data}')" class="btn btn-sm btn-outline-${row.IsActive ? 'warning' : 'success'} me-1">
-                                    <i class="bi bi-power"></i> ${row.IsActive ? 'Deactivate' : 'Activate'}
+                                <button onclick="toggleAlertStatus('${data}')" class="btn btn-sm btn-outline-${row.isActive ? 'warning' : 'success'} me-1">
+                                    <i class="bi bi-power"></i> ${row.isActive ? 'Deactivate' : 'Activate'}
                                 </button>
                                 <button onclick="confirmDelete('${data}')" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i> Delete
@@ -213,52 +218,73 @@
                             `;
                         }
                     }
-                ]
+                ],
+                error: function(xhr, error, thrown) {
+                    console.error("AJAX error:", xhr, error, thrown);
+                    toastr.error('Failed to load disaster alerts data. Please try again.');
+                }
             });
 
-            if ('@TempData["SuccessMessage"]' !== '') {
-                toastr.success('@TempData["SuccessMessage"]');
-                alertsTable.ajax.reload(null, false);
+            // Show success/error messages
+            @if (TempData["SuccessMessage"] != null)
+            {
+                    <text>toastr.success('@Html.Raw(TempData["SuccessMessage"])');</text>
             }
-
-            if ('@TempData["ErrorMessage"]' !== '') {
-                toastr.error('@TempData["ErrorMessage"]');
+            @if (TempData["ErrorMessage"] != null)
+            {
+                    <text>toastr.error('@Html.Raw(TempData["ErrorMessage"])');</text>
             }
         });
 
         function toggleAlertStatus(id) {
             if (confirm('Are you sure you want to change the status of this alert?')) {
-                $.post('/Admin/DisasterAlert/ToggleStatus', { id: id })
-                    .done(function(response) {
-                        if (response.success) {
-                            toastr.success(response.message);
+                // Use AJAX with anti-forgery token
+                $.ajax({
+                    url: '/Admin/DisasterAlert/ToggleStatus',
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response && response.success) {
+                            toastr.success(response.message || 'Status updated successfully');
                             $('#alerts').DataTable().ajax.reload(null, false);
                         } else {
-                            toastr.error(response.message);
+                            toastr.error(response.message || 'Failed to update status');
                         }
-                    })
-                    .fail(function(xhr, error, thrown) {
+                    },
+                    error: function(xhr, error, thrown) {
                         console.error("Toggle status error:", xhr, error, thrown);
                         toastr.error('Error updating alert status');
-                    });
+                    }
+                });
             }
         }
 
         function confirmDelete(id) {
             if (confirm('Are you sure you want to delete this alert? This action cannot be undone.')) {
-                $.post('/Admin/DisasterAlert/Delete', { id: id })
-                    .done(function(response) {
-                        if (response.success) {
-                            toastr.success(response.message);
+                // Use AJAX with anti-forgery token
+                $.ajax({
+                    url: '/Admin/DisasterAlert/Delete',
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response && response.success) {
+                            toastr.success(response.message || 'Alert deleted successfully');
                             $('#alerts').DataTable().ajax.reload(null, false);
                         } else {
-                            toastr.error(response.message);
+                            toastr.error(response.message || 'Failed to delete alert');
                         }
-                    })
-                    .fail(function(xhr, error, thrown) {
+                    },
+                    error: function(xhr, error, thrown) {
                         console.error("Delete error:", xhr, error, thrown);
                         toastr.error('Error deleting alert');
-                    });
+                    }
+                });
             }
         }
     </script>

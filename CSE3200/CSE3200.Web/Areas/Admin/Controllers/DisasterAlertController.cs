@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace CSE3200.Web.Areas.Admin.Controllers
@@ -59,7 +61,7 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                     StartDate = model.StartDate,
                     EndDate = model.EndDate,
                     DisplayOrder = model.DisplayOrder,
-                    CreatedBy = User.Identity.Name // Ensure this is not null
+                    CreatedBy = User.Identity.Name
                 };
 
                 var alertId = await _mediator.Send(command);
@@ -72,7 +74,6 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                 _logger.LogError(ex, "Error creating disaster alert");
                 ModelState.AddModelError("", $"Error creating disaster alert: {ex.Message}");
 
-                // ADD THIS to see inner exception in development
 #if DEBUG
                 ModelState.AddModelError("", $"Inner exception: {ex.InnerException?.Message}");
 #endif
@@ -80,7 +81,6 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                 return View(model);
             }
         }
-
 
         public IActionResult Edit(Guid id)
         {
@@ -145,7 +145,6 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                 return View(model);
             }
         }
-
         [HttpPost]
         public async Task<IActionResult> ToggleStatus(Guid id)
         {
@@ -161,20 +160,18 @@ namespace CSE3200.Web.Areas.Admin.Controllers
 
                 if (success)
                 {
-                    TempData["SuccessMessage"] = "Disaster alert status updated successfully";
+                    return Json(new { success = true, message = "Disaster alert status updated successfully" });
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Failed to update disaster alert status";
+                    return Json(new { success = false, message = "Failed to update disaster alert status" });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error toggling disaster alert status");
-                TempData["ErrorMessage"] = $"Error updating disaster alert status: {ex.Message}";
+                return Json(new { success = false, message = $"Error updating disaster alert status: {ex.Message}" });
             }
-
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -183,26 +180,42 @@ namespace CSE3200.Web.Areas.Admin.Controllers
             try
             {
                 _alertService.DeleteAlert(id);
-                TempData["SuccessMessage"] = "Disaster alert deleted successfully";
+                return Json(new { success = true, message = "Disaster alert deleted successfully" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting disaster alert");
-                TempData["ErrorMessage"] = $"Error deleting disaster alert: {ex.Message}";
+                return Json(new { success = false, message = $"Error deleting disaster alert: {ex.Message}" });
             }
-
-            return RedirectToAction(nameof(Index));
         }
+
 
         [HttpPost]
         public JsonResult GetAlertsJson([FromBody] DisasterAlertListModel model)
         {
+            _logger.LogInformation("GetAlertsJson called with model: {@Model}", model);
+
+            if (model == null)
+            {
+                _logger.LogWarning("DisasterAlertListModel is null in GetAlertsJson");
+                return Json(new
+                {
+                    draw = 1,
+                    recordsTotal = 0,
+                    recordsFiltered = 0,
+                    data = new object[0]
+                });
+            }
+
             try
             {
+                // Get alerts with proper sorting
                 var alerts = _alertService.GetAllAlertsWithPaging(
                     model.PageIndex,
                     model.PageSize,
                     out int totalCount);
+
+                _logger.LogInformation("Returning {Count} alerts out of {TotalCount}", alerts.Count, totalCount);
 
                 return Json(new
                 {
@@ -211,14 +224,14 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                     recordsFiltered = totalCount,
                     data = alerts.Select(a => new
                     {
-                        Id = a.Id.ToString(),
-                        Title = a.Title,
-                        Severity = a.Severity.ToString(),
-                        StartDate = a.StartDate?.ToString("yyyy-MM-dd HH:mm"),
-                        EndDate = a.EndDate?.ToString("yyyy-MM-dd HH:mm"),
-                        IsActive = a.IsActive,
-                        DisplayOrder = a.DisplayOrder,
-                        CreatedDate = a.CreatedDate.ToString("yyyy-MM-dd")
+                        id = a.Id.ToString(),
+                        title = a.Title,
+                        severity = a.Severity.ToString(),
+                        startDate = a.StartDate?.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        endDate = a.EndDate?.ToString("yyyy-MM-ddTHH:mm:ss"),
+                        isActive = a.IsActive,
+                        displayOrder = a.DisplayOrder,
+                        createdDate = a.CreatedDate.ToString("yyyy-MM-ddTHH:mm:ss")
                     }).ToArray()
                 });
             }
@@ -239,17 +252,14 @@ namespace CSE3200.Web.Areas.Admin.Controllers
         {
             var buttons = new System.Text.StringBuilder();
 
-            // Edit button
             buttons.Append($"<a href=\"/Admin/DisasterAlert/Edit/{alert.Id}\" class=\"btn btn-sm btn-outline-primary me-1\">");
             buttons.Append("<i class=\"bi bi-pencil-square\"></i> Edit</a>");
 
-            // Toggle status button
             var statusText = alert.IsActive ? "Deactivate" : "Activate";
             var statusClass = alert.IsActive ? "warning" : "success";
             buttons.Append($"<button onclick=\"toggleAlertStatus('{alert.Id}')\" class=\"btn btn-sm btn-outline-{statusClass} me-1\">");
             buttons.Append($"<i class=\"bi bi-power\"></i> {statusText}</button>");
 
-            // Delete button
             buttons.Append($"<button onclick=\"confirmDelete('{alert.Id}')\" class=\"btn btn-sm btn-outline-danger\">");
             buttons.Append("<i class=\"bi bi-trash\"></i> Delete</button>");
 

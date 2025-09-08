@@ -39,9 +39,7 @@ namespace CSE3200.Application.Features.DisasterAlerts.Commands
                     DisplayOrder = request.DisplayOrder,
                     CreatedDate = DateTime.UtcNow,
                     CreatedBy = request.CreatedBy,
-                    // ADD THIS LINE - Set ModifiedBy to same as CreatedBy for new records
                     ModifiedBy = request.CreatedBy,
-                    // ADD THIS LINE - Set ModifiedDate to same as CreatedDate for new records
                     ModifiedDate = DateTime.UtcNow
                 };
 
