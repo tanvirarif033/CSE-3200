@@ -288,6 +288,19 @@
                                         <p>Donation</p>
                                     </a>
                                 </li>
+
+                                <li class="nav-item">
+                                    <a href="/Admin/FAQ" class="nav-link">
+                                        <i class="nav-icon bi bi-question-circle"></i>
+                                        <p>FAQ Management</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/Admin/DisasterAlert" class="nav-link">
+                                        <i class="bi bi-exclamation-octagon"></i>
+                                        <p>Disaster Alert </p>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         <!-- In your _Layout.cshtml sidebar -->
@@ -302,21 +315,13 @@
                         @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
                         {
                             <li class="nav-item">
-                                <a asp-area="Admin" asp-controller="Disasters" asp-action="Index" class="nav-link">
-                                    <i class="nav-icon bi bi-exclamation-triangle"></i>
-                                    <p>Disasters</p>
-                                </a>
+                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
                             </li>
                         }
-
-                        <!-- Approvals Section (Admin Only) -->
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a asp-area="Admin" asp-controller="Disasters" asp-action="Approvals" class="nav-link">
-                                    <i class="nav-icon bi bi-check-circle"></i>
-                                    <p>Approvals</p>
-                                </a>
+                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
                             </li>
                         }
 

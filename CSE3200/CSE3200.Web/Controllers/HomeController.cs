@@ -25,6 +25,7 @@ namespace CSE3200.Web.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<HomeController> _logger;
         private readonly IMapsService _mapsService;
+        private readonly IDisasterAlertService _alertService;
 
         public HomeController(
             IDisasterService disasterService,
@@ -32,7 +33,8 @@ namespace CSE3200.Web.Controllers
             IVolunteerAssignmentService volunteerService,
             UserManager<ApplicationUser> userManager,
             ILogger<HomeController> logger,
-            IMapsService mapsService)
+            IMapsService mapsService,
+            IDisasterAlertService alertService)
         {
             _disasterService = disasterService;
             _donationService = donationService;
@@ -40,6 +42,7 @@ namespace CSE3200.Web.Controllers
             _userManager = userManager;
             _logger = logger;
             _mapsService = mapsService;
+            _alertService = alertService;
         }
 
         public IActionResult Index()
@@ -54,11 +57,13 @@ namespace CSE3200.Web.Controllers
                 var recentDonations = new List<Donation>();
 
                 // Add volunteer count to each disaster
+                // Add volunteer count to each disaster
                 foreach (var disaster in approvedDisasters)
                 {
                     disaster.VolunteerCount = _volunteerService.GetAssignedVolunteerCount(disaster.Id);
                     totalDonations += _donationService.GetTotalDonationsByDisaster(disaster.Id);
                 }
+
 
                 // Get total unique donors and recent donations
                 var allDonations = _donationService.GetDonations(1, 1000, "DonationDate DESC", new DataTablesSearch()).data;
@@ -73,6 +78,10 @@ namespace CSE3200.Web.Controllers
                 ViewBag.TotalDonations = totalDonations;
                 ViewBag.TotalDonors = totalDonors;
                 ViewBag.RecentDonations = recentDonations;
+
+                // Get active disaster alerts for the news ticker
+                var activeAlerts = _alertService.GetActiveAlerts()?.ToList() ?? new List<DisasterAlert>();
+                ViewBag.DisasterAlerts = activeAlerts;
 
                 return View(approvedDisasters);
             }
@@ -426,6 +435,7 @@ namespace CSE3200.Web.Controllers
                 return Json(new { success = false, message = "Error loading disaster statistics" });
             }
         }
+
         [HttpGet]
         public async Task<IActionResult> GetDisasterMap(Guid id)
         {
@@ -457,7 +467,7 @@ namespace CSE3200.Web.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetUserVolunteerAssignments()
+        public IActionResult GetUserVolunteerAssignments()
         {
             try
             {

@@ -1,0 +1,162 @@
+﻿@{
+    ViewData["Title"] = "Disaster Alerts";
+}
+
+<div id="alertBar" class="alert-bar" style="display: none;">
+    <div class="container-fluid">
+        <div class="alert-content">
+            <span id="alertIcon" class="alert-icon"></span>
+            <span id="alertMessage" class="alert-message"></span>
+        </div>
+        <button id="closeAlert" class="btn-close" aria-label="Close"></button>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .alert-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            padding: 1rem 0;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+        }
+
+        .alert-critical {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .alert-high {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .alert-medium {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .alert-low {
+            background-color: #198754;
+            color: white;
+        }
+
+        .btn-close {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @@keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let currentAlertIndex = 0;
+            let alerts = [];
+            let alertInterval;
+
+            // Fetch current alerts
+            function fetchAlerts() {
+                $.get('/PublicDisasterAlert/GetCurrentAlerts')
+                    .done(function (data) {
+                        alerts = data;
+                        if (alerts.length > 0) {
+                            showAlertBar();
+                            startAlertRotation();
+                        } else {
+                            hideAlertBar();
+                        }
+                    })
+                    .fail(function () {
+                        console.error('Failed to fetch alerts');
+                    });
+            }
+
+            // Show alert bar with current alert
+            function showAlertBar() {
+                if (alerts.length === 0) return;
+
+                const alert = alerts[currentAlertIndex];
+                const alertBar = $('#alertBar');
+                const alertIcon = $('#alertIcon');
+                const alertMessage = $('#alertMessage');
+
+                // Set alert class based on severity
+                alertBar.removeClass('alert-critical alert-high alert-medium alert-low')
+                       .addClass(`alert-${alert.severity.toLowerCase()}`);
+
+                // Set icon based on severity
+                let icon = '⚠️';
+                switch (alert.severity.toLowerCase()) {
+                    case 'critical': icon = '🔥'; break;
+                    case 'high': icon = '❗'; break;
+                    case 'medium': icon = '⚠️'; break;
+                    case 'low': icon = 'ℹ️'; break;
+                }
+
+                alertIcon.text(icon);
+                alertMessage.text(`${alert.title}: ${alert.message}`);
+                alertBar.show();
+            }
+
+            // Hide alert bar
+            function hideAlertBar() {
+                $('#alertBar').hide();
+                if (alertInterval) {
+                    clearInterval(alertInterval);
+                    alertInterval = null;
+                }
+            }
+
+            // Start rotating alerts
+            function startAlertRotation() {
+                if (alertInterval) clearInterval(alertInterval);
+
+                alertInterval = setInterval(() => {
+                    currentAlertIndex = (currentAlertIndex + 1) % alerts.length;
+                    showAlertBar();
+                }, 10000); // Rotate every 10 seconds
+            }
+
+            // Close button handler
+            $('#closeAlert').on('click', function () {
+                hideAlertBar();
+            });
+
+            // Auto-hide after 1 minute
+            setTimeout(hideAlertBar, 60000);
+
+            // Initial fetch
+            fetchAlerts();
+
+            // Refresh alerts every 5 minutes
+            setInterval(fetchAlerts, 300000);
+        });
+    </script>
+}

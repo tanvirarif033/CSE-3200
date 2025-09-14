@@ -1,0 +1,254 @@
+﻿@model AddDisasterAlertModel
+@using CSE3200.Domain.Entities
+
+@{
+    ViewData["Title"] = "Add Disaster Alert";
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: #3f51b5;
+            border-color: #3f51b5;
+        }
+
+            .btn-primary:hover {
+                background-color: #303f9f;
+                border-color: #303f9f;
+            }
+
+        .validation-summary-errors {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .severity-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-critical {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-high {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .badge-medium {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .badge-low {
+            background-color: #198754;
+            color: white;
+        }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header py-3 bg-dark text-white mb-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Add Disaster Alert</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 bg-transparent">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard" class="text-white-50">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/DisasterAlert" class="text-white-50">Disaster Alerts</a></li>
+                    <li class="breadcrumb-item active text-white" aria-current="page">Add</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Add New Disaster Alert</h5>
+                    </div>
+                    <form asp-antiforgery="true" asp-area="Admin" asp-controller="DisasterAlert" asp-action="Create" method="post" id="alertForm">
+                        <div class="card-body">
+                           
+
+                          
+
+                            <div class="mb-3">
+                                <label asp-for="Title" class="form-label">Alert Title *</label>
+                                <input type="text" class="form-control" asp-for="Title" placeholder="Enter alert title">
+                                <span asp-validation-for="Title" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Message" class="form-label">Alert Message *</label>
+                                <textarea class="form-control" asp-for="Message" rows="3" placeholder="Enter alert message (max 500 characters)"></textarea>
+                                <small class="form-text text-muted"><span id="messageCounter">0</span>/500 characters</small>
+                                <span asp-validation-for="Message" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Severity" class="form-label">Severity Level *</label>
+                                <select class="form-control" asp-for="Severity" asp-items="Html.GetEnumSelectList<AlertSeverity>()" id="severitySelect">
+                                    <option value="">Select Severity Level</option>
+                                </select>
+                                <div class="mt-2">
+                                    <small>
+                                        <span class="severity-badge badge-low">Low</span> - Informational
+                                        <span class="severity-badge badge-medium ms-2">Medium</span> - Warning
+                                        <span class="severity-badge badge-high ms-2">High</span> - Important
+                                        <span class="severity-badge badge-critical ms-2">Critical</span> - Emergency
+                                    </small>
+                                </div>
+                                <span asp-validation-for="Severity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="StartDate" class="form-label">Start Date (Optional)</label>
+                                        <input type="datetime-local" class="form-control" asp-for="StartDate">
+                                        <small class="form-text text-muted">When the alert should start appearing</small>
+                                        <span asp-validation-for="StartDate" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="EndDate" class="form-label">End Date (Optional)</label>
+                                        <input type="datetime-local" class="form-control" asp-for="EndDate">
+                                        <small class="form-text text-muted">When the alert should stop appearing</small>
+                                        <span asp-validation-for="EndDate" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="DisplayOrder" class="form-label">Display Order *</label>
+                                <input type="number" class="form-control" asp-for="DisplayOrder" min="0" max="1000" value="0">
+                                <small class="form-text text-muted">Lower numbers appear first</small>
+                                <span asp-validation-for="DisplayOrder" class="text-danger small"></span>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Note:</strong> Alerts will be displayed to all users in a rotating banner.
+                                Critical alerts will be shown with higher priority.
+                            </div>
+                        </div>
+                        <div class="card-footer text-end bg-light">
+                            <a href="/Admin/DisasterAlert" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="bi bi-bell me-1"></i> Create Alert
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include jQuery Validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+        $(document).ready(function () {
+            // Character counter for message
+            $('#Message').on('input', function () {
+                const length = $(this).val().length;
+                $('#messageCounter').text(length);
+                if (length > 500) {
+                    $('#messageCounter').addClass('text-danger');
+                } else {
+                    $('#messageCounter').removeClass('text-danger');
+                }
+            });
+
+            // Set default dates if not set
+            if (!$('#StartDate').val()) {
+                const now = new Date();
+                now.setMinutes(0, 0, 0);
+                $('#StartDate').val(now.toISOString().slice(0, 16));
+            }
+
+            // End date should be after start date
+            $('#StartDate').on('change', function () {
+                const startDate = new Date($(this).val());
+                const endDateInput = $('#EndDate');
+
+                if (endDateInput.val()) {
+                    const endDate = new Date(endDateInput.val());
+                    if (endDate <= startDate) {
+                        endDateInput.val('');
+                    }
+                }
+            });
+
+            // Form submission handler
+            $('#alertForm').on('submit', function () {
+                // Disable submit button to prevent double submission
+                $('#submitBtn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...');
+            });
+
+            // Update severity preview
+            $('#severitySelect').on('change', function () {
+                const severity = $(this).val();
+                $('.severity-badge').removeClass('badge-low badge-medium badge-high badge-critical');
+
+                switch(severity) {
+                    case '0': // Low
+                        $('.severity-badge').addClass('badge-low');
+                        break;
+                    case '1': // Medium
+                        $('.severity-badge').addClass('badge-medium');
+                        break;
+                    case '2': // High
+                        $('.severity-badge').addClass('badge-high');
+                        break;
+                    case '3': // Critical
+                        $('.severity-badge').addClass('badge-critical');
+                        break;
+                    default:
+                        $('.severity-badge').addClass('badge-low badge-medium badge-high badge-critical');
+                }
+            });
+
+            // Initialize character counter
+            $('#Message').trigger('input');
+        });
+    </script>
+}

@@ -7,10 +7,173 @@
 @{
     ViewData["Title"] = "Disaster Relief - Home";
 }
+<!-- DISASTER ALERT BAR -->
+<section class="disaster-alert-bar">
+    <div class="container-fluid px-0">
+        <div class="alert-ticker">
+            <div class="ticker-header">
+                <span class="ticker-label">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>LIVE ALERTS:
+                </span>
+            </div>
+            <div class="ticker-content">
+                @if (ViewBag.DisasterAlerts != null && ((IEnumerable<dynamic>)ViewBag.DisasterAlerts).Any())
+                {
+                    foreach (var alert in (IEnumerable<dynamic>)ViewBag.DisasterAlerts)
+                    {
+                        <div class="ticker-item" data-severity="@alert.Severity">
+                            <span class="alert-badge severity-@alert.Severity.ToString().ToLower()">@alert.Severity</span>
+                            <span class="alert-text">@alert.Title - @alert.Message</span>
+                            <span class="alert-time">@alert.StartDate.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="ticker-item" data-severity="None">
+                        <span class="alert-text">No active alerts at this time</span>
+                    </div>
+                }
+            </div>
+            <div class="ticker-controls">
+                <button class="ticker-control-btn" id="prevAlert">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button class="ticker-control-btn" id="pausePlayAlert">
+                    <i class="bi bi-pause-fill"></i>
+                </button>
+                <button class="ticker-control-btn" id="nextAlert">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
 
 @section Styles {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <style>
+        /* DISASTER ALERT BAR STYLES */
+        .disaster-alert-bar {
+            background: linear-gradient(90deg, #2c2c3d 0%, #1f1f2e 100%);
+            color: white;
+            padding: 0.5rem 0;
+            border-bottom: 2px solid #dc3545;
+        }
+
+        .alert-ticker {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+        }
+
+        .ticker-header {
+            display: flex;
+            align-items: center;
+            min-width: 120px;
+        }
+
+        .ticker-label {
+            font-weight: bold;
+            white-space: nowrap;
+            color: #ffc107;
+        }
+
+        .ticker-content {
+            flex: 1;
+            overflow: hidden;
+            height: 30px;
+            position: relative;
+            margin: 0 1rem;
+        }
+
+        .ticker-item {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .alert-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .severity-critical {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .severity-high {
+            background-color: #fd7e14;
+            color: white;
+        }
+
+        .severity-medium {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .severity-low {
+            background-color: #198754;
+            color: white;
+        }
+
+        .alert-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .ticker-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ticker-control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+            .ticker-control-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+        @@media (max-width: 768px) {
+            .alert-time {
+                display: none;
+            }
+
+            .ticker-header {
+                min-width: 100px;
+            }
+
+            .ticker-label {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* EXISTING STYLES */
         .hero-section {
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1593113630400-ea4288922497?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');
             background-size: cover;
@@ -20,34 +183,42 @@
             margin-bottom: 3rem;
         }
 
-        .disaster-card {
-            border: none;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            height: 100%;
-        }
+        /* DISASTER CARD SEVERITY STYLES */
+.disaster-card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    background-color: white; /* Ensure card background is white */
+}
 
-            .disaster-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            .disaster-card,
+            .disaster-card * {
+                color: black !important; /* Force all text to be black */
             }
 
-        .severity-critical {
-            border-left: 4px solid #dc3545;
-        }
+.disaster-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
 
-        .severity-high {
-            border-left: 4px solid #fd7e14;
-        }
+/* Only the left border is colored */
+.severity-critical {
+    border-left: 4px solid #dc3545;
+}
 
-        .severity-medium {
-            border-left: 4px solid #ffc107;
-        }
+.severity-high {
+    border-left: 4px solid #fd7e14;
+}
 
-        .severity-low {
-            border-left: 4px solid #198754;
-        }
+.severity-medium {
+    border-left: 4px solid #ffc107;
+}
+
+.severity-low {
+    border-left: 4px solid #198754;
+}
 
         .card-badge {
             position: absolute;
@@ -154,9 +325,24 @@
             width: 100%;
             border-radius: 0.5rem;
         }
+
+        .public-faq-section h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .public-faq-section .accordion-button {
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .public-faq-section .accordion-button:not(.collapsed) {
+                background-color: #f8f9fa;
+                color: #0d6efd;
+                box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+            }
     </style>
 }
-
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
@@ -366,6 +552,7 @@
     </div>
 </section>
 
+
 <!-- DONATION MODAL -->
 <div class="modal fade" id="donationModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -447,7 +634,67 @@
         </div>
     </div>
 </div>
+<!-- Public FAQ Section -->
+<section class="public-faq-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Public FAQs</h2>
+            <p class="text-muted">Find quick answers to the most common questions.</p>
+        </div>
 
+        <div class="accordion" id="faqAccordion">
+            <!-- FAQ Item 1 -->
+            <div class="accordion-item mb-3 shadow-sm rounded">
+                <h2 class="accordion-header" id="faqHeading1">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="false" aria-controls="faq1">
+                        <span class="badge bg-primary me-2">General</span>
+                        What should I do in case of an emergency?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        In case of an emergency, call the local emergency number immediately and follow official instructions. Stay calm and assist others if possible.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Item 2 -->
+            <div class="accordion-item mb-3 shadow-sm rounded">
+                <h2 class="accordion-header" id="faqHeading2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                        <span class="badge bg-success me-2">Relief</span>
+                        How can I get disaster relief assistance?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        You can contact the local relief office or visit the official disaster management website to apply for assistance. Required documents may include your ID and proof of residence.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="accordion-item mb-3 shadow-sm rounded">
+                <h2 class="accordion-header" id="faqHeading3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                        <span class="badge bg-warning me-2">Donation</span>
+                        How can I donate to support affected families?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Donations can be made through our official donation portal or by contacting registered NGOs. We ensure transparency and direct support to those in need.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View All FAQs -->
+        <div class="text-center mt-4">
+            <a href="/Faq" class="btn btn-outline-primary rounded-pill px-4">View All FAQs</a>
+        </div>
+    </div>
+</section>
 <!-- DETAILS MODAL -->
 <div class="modal fade" id="detailsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -502,6 +749,9 @@
     </div>
 </div>
 
+
+
+
 @section Scripts {
     <!-- Google Maps API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=@Configuration["GoogleMaps:ApiKey"]&callback=Function.prototype" async defer></script>
@@ -509,6 +759,75 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+                 // DISASTER ALERT TICKER FUNCTIONALITY
+                const tickerItems = $('.ticker-item');
+                let currentIndex = 0;
+                let isPaused = false;
+                let tickerInterval;
+
+                if (tickerItems.length > 0) {
+                    // Show first item
+                    $(tickerItems[currentIndex]).css('opacity', 1);
+
+                    // Start auto rotation if more than one alert
+                    if (tickerItems.length > 1) {
+                        startTicker();
+                    }
+
+                    // Next button
+                    $('#nextAlert').on('click', function() {
+                        if (!isPaused && tickerItems.length > 1) {
+                            clearInterval(tickerInterval);
+                        }
+                        showNextAlert();
+                        if (!isPaused && tickerItems.length > 1) {
+                            startTicker();
+                        }
+                    });
+
+                    // Previous button
+                    $('#prevAlert').on('click', function() {
+                        if (!isPaused && tickerItems.length > 1) {
+                            clearInterval(tickerInterval);
+                        }
+                        showPrevAlert();
+                        if (!isPaused && tickerItems.length > 1) {
+                            startTicker();
+                        }
+                    });
+
+                    // Pause/Play button
+                    $('#pausePlayAlert').on('click', function() {
+                        isPaused = !isPaused;
+                        if (isPaused) {
+                            clearInterval(tickerInterval);
+                            $(this).html('<i class="bi bi-play-fill"></i>');
+                        } else {
+                            startTicker();
+                            $(this).html('<i class="bi bi-pause-fill"></i>');
+                        }
+                    });
+                }
+
+                function startTicker() {
+                    tickerInterval = setInterval(function() {
+                        showNextAlert();
+                    }, 5000); // Rotate every 5 seconds
+                }
+
+                function showNextAlert() {
+                    $(tickerItems[currentIndex]).css('opacity', 0);
+                    currentIndex = (currentIndex + 1) % tickerItems.length;
+                    $(tickerItems[currentIndex]).css('opacity', 1);
+                }
+
+                function showPrevAlert() {
+                    $(tickerItems[currentIndex]).css('opacity', 0);
+                    currentIndex = (currentIndex - 1 + tickerItems.length) % tickerItems.length;
+                    $(tickerItems[currentIndex]).css('opacity', 1);
+                }
+
+                // EXISTING FUNCTIONALITY
             // Search functionality
             $('#disasterSearch').on('keyup', function () {
                 var searchText = $(this).val().toLowerCase();

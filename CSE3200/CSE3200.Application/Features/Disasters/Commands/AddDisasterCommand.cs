@@ -20,4 +20,4 @@ namespace CSE3200.Application.Features.Disasters.Commands
         public string CreatedBy { get; set; }
         public bool IsAdmin { get; set; }
     }
-}
+} 

@@ -14,7 +14,8 @@ namespace CSE3200.Domain
         public  IDisasterRepository DisasterRepository { get; }
         public IDonationRepository DonationRepository { get; }
         public IVolunteerAssignmentRepository VolunteerAssignmentRepository { get; }
-
+        public IFAQRepository FAQRepository { get; }
+        public IDisasterAlertRepository DisasterAlertRepository { get; }
 
     }
 }
