@@ -1,12 +1,15 @@
 ﻿using CSE3200.Infrastructure.Identity;
 using CSE3200.Web.Models;
+using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using System.Text;
 using System.Security.Claims;
+using CSE3200.Web.Services;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 
 namespace CSE3200.Web.Controllers
 {
@@ -18,18 +21,24 @@ namespace CSE3200.Web.Controllers
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         //private readonly IEmailSender _emailSender;
+        private readonly IOtpService _otpService;
+        private readonly IEmailSender _emailSender;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
-            ILogger<RegisterModel> logger)
+            ILogger<RegisterModel> logger,
+            IOtpService otpService,
+            IEmailSender emailSender)
         {
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
+            _otpService = otpService;
+            _emailSender = emailSender;
         }
 
         // ===== Registration =====
@@ -265,6 +274,212 @@ namespace CSE3200.Web.Controllers
                 throw new NotSupportedException("The default UI requires a user store with email support.");
 
             return (IUserEmailStore<ApplicationUser>)_userStore;
+        }
+
+        // In your AccountController, add these methods:
+
+        // ===== Forgot Password =====
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    // Don't reveal that the user does not exist or is not confirmed
+                    return RedirectToAction(nameof(ForgotPasswordConfirmation));
+                }
+
+                // Generate OTP
+                var otp = _otpService.GenerateOtp(user);
+
+                try
+                {
+                    // Send OTP via email
+                    await _emailSender.SendEmailAsync(
+                        model.Email,
+                        "Password Reset OTP - Disaster Management System",
+                        $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px;'>
+                    <div style='text-align: center; background-color: #f97316; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>
+                        <h2 style='color: white; margin: 0;'>Disaster Management System</h2>
+                    </div>
+                    <p style='font-size: 16px;'>You have requested to reset your password. Use the OTP code below to proceed:</p>
+                    <div style='background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0; border-radius: 8px;'>
+                        {otp}
+                    </div>
+                    <p style='font-size: 14px; color: #64748b;'>This OTP will expire in 10 minutes. If you didn't request this, please ignore this email.</p>
+                    <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;'>
+                    <p style='font-size: 12px; color: #64748b; text-align: center;'>This is an automated message from the National Disaster Response Portal.</p>
+                </div>"
+                    );
+
+                    _logger.LogInformation($"OTP email sent to {model.Email}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send OTP email");
+                    ModelState.AddModelError(string.Empty, "Failed to send OTP email. Please try again later.");
+                    return View(model);
+                }
+
+                // Store email in TempData for the next step
+                TempData["ResetEmail"] = model.Email;
+                return RedirectToAction(nameof(EnterOtp));
+            }
+
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // ===== OTP Verification =====
+        [AllowAnonymous]
+        public IActionResult EnterOtp()
+        {
+            // Check if email is available from the forgot password step
+            if (TempData["ResetEmail"] == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var model = new EnterOtpModel
+            {
+                Email = TempData["ResetEmail"].ToString()
+            };
+
+            // Keep the email for the form
+            TempData.Keep("ResetEmail");
+
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyOtp(EnterOtpModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData.Keep("ResetEmail");
+                return View("EnterOtp", model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction(nameof(ForgotPasswordConfirmation));
+            }
+
+            // Validate OTP
+            if (!_otpService.ValidateOtp(user, model.OTP))
+            {
+                ModelState.AddModelError(string.Empty, "Invalid or expired OTP.");
+                TempData.Keep("ResetEmail");
+                return View("EnterOtp", model);
+            }
+
+            // OTP is valid, redirect to reset password page
+            TempData["ValidatedEmail"] = model.Email;
+            return RedirectToAction(nameof(ResetPassword));
+        }
+
+        // In AccountController.cs - Fix the ResetPassword methods
+
+        // ===== Reset Password =====
+        [AllowAnonymous]
+        public IActionResult ResetPassword()
+        {
+            // Check if email is validated through OTP
+            if (TempData["ValidatedEmail"] == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var model = new ResetPasswordModel
+            {
+                Email = TempData["ValidatedEmail"].ToString()
+            };
+
+            // Keep the email for the form
+            TempData.Keep("ValidatedEmail");
+
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData.Keep("ValidatedEmail");
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+            }
+
+            try
+            {
+                // Generate password reset token
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // Reset the password
+                var result = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation($"Password reset successfully for user: {model.Email}");
+
+                    // Clear the TempData after successful reset
+                    TempData.Remove("ValidatedEmail");
+                    TempData.Remove("ResetEmail");
+
+                    // Sign in the user automatically after password reset
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    return RedirectToAction(nameof(ResetPasswordConfirmation));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error resetting password for user: {model.Email}");
+                ModelState.AddModelError(string.Empty, "An error occurred while resetting your password. Please try again.");
+            }
+
+            TempData.Keep("ValidatedEmail");
+            return View(model);
+        }
+
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
     }
 }

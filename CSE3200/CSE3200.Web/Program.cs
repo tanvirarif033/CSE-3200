@@ -7,7 +7,6 @@ using CSE3200.Web;
 using CSE3200.Web.Data;
 using CSE3200.Web.Services;
 
-// ? (optional, but nice to have)
 using Microsoft.AspNetCore.Authentication.Google; // for clarity
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -70,13 +69,23 @@ try
 
     // ? Google Authentication — ?? ?????? ?????? Build() ?? ???
     builder.Services
-        .AddAuthentication()  // Identity ?????? ????? ??? ??? ????; ???? external provider ??? ????? ??????
+        .AddAuthentication()  
         .AddGoogle(options =>
         {
             options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
             options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
             // ?????: options.AuthorizationEndpoint += "?prompt=select_account";
         });
+
+    // Add distributed cache (memory cache for development)
+    builder.Services.AddDistributedMemoryCache();
+
+    // Add email configuration
+    builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+    // Register services
+    builder.Services.AddScoped<IOtpService, OtpService>();
+    builder.Services.AddTransient<IEmailSender, EmailSender>();
     // Add HttpClient factory (you already have this, keep it)
     builder.Services.AddHttpClient();
 
