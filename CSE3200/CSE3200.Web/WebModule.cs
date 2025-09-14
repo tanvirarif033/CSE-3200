@@ -41,8 +41,8 @@ namespace CSE3200.Web
             // Register repositories
             builder.RegisterType<ProductRepository>().As<IProductRepository>()
                 .InstancePerLifetimeScope();
-            builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
-                .InstancePerLifetimeScope();
+          //  builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
+               // .InstancePerLifetimeScope();
             builder.RegisterType<DonationRepository>().As<IDonationRepository>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<VolunteerAssignmentRepository>().As<IVolunteerAssignmentRepository>()
@@ -58,8 +58,8 @@ namespace CSE3200.Web
             // Register services
             builder.RegisterType<ProductService>().As<IProductService>()
                 .InstancePerLifetimeScope();
-            builder.RegisterType<DisasterService>().As<IDisasterService>()
-                .InstancePerLifetimeScope();
+            //builder.RegisterType<DisasterService>().As<IDisasterService>()
+              //  .InstancePerLifetimeScope();
             builder.RegisterType<DonationService>().As<IDonationService>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<VolunteerAssignmentService>().As<IVolunteerAssignmentService>()
@@ -72,10 +72,10 @@ namespace CSE3200.Web
             builder.RegisterType<AddProductCommandHandler>().AsSelf();
 
             // Disaster command handlers
-            builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
-            builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
-            builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
-            builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
+            //builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
+            //builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
+            //builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
+            //builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
 
             // FAQ command handlers
             builder.RegisterType<AddFAQCommandHandler>().As<IRequestHandler<AddFAQCommand, Guid>>();
@@ -96,6 +96,19 @@ namespace CSE3200.Web
             builder.RegisterType<ToggleDisasterAlertStatusCommandHandler>().As<IRequestHandler<ToggleDisasterAlertStatusCommand, bool>>();
             builder.RegisterType<GetDisasterAlertsQueryHandler>().As<IRequestHandler<GetDisasterAlertsQuery, IList<DisasterAlert>>>();
             base.Load(builder);
+
+            // Disaster-related registrations
+            builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<DisasterService>().As<IDisasterService>()
+                .InstancePerLifetimeScope();
+
+            // Register command handlers with logger
+            builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
+            builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
+            builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
+            builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
         }
     }
 }

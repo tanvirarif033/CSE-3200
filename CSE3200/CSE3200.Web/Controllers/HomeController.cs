@@ -26,6 +26,7 @@ namespace CSE3200.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IMapsService _mapsService;
         private readonly IDisasterAlertService _alertService;
+
         public HomeController(
             IDisasterService disasterService,
             IDonationService donationService,
@@ -56,11 +57,13 @@ namespace CSE3200.Web.Controllers
                 var recentDonations = new List<Donation>();
 
                 // Add volunteer count to each disaster
+                // Add volunteer count to each disaster
                 foreach (var disaster in approvedDisasters)
                 {
                     disaster.VolunteerCount = _volunteerService.GetAssignedVolunteerCount(disaster.Id);
                     totalDonations += _donationService.GetTotalDonationsByDisaster(disaster.Id);
                 }
+
 
                 // Get total unique donors and recent donations
                 var allDonations = _donationService.GetDonations(1, 1000, "DonationDate DESC", new DataTablesSearch()).data;
@@ -432,6 +435,7 @@ namespace CSE3200.Web.Controllers
                 return Json(new { success = false, message = "Error loading disaster statistics" });
             }
         }
+
         [HttpGet]
         public async Task<IActionResult> GetDisasterMap(Guid id)
         {
@@ -461,10 +465,9 @@ namespace CSE3200.Web.Controllers
             }
         }
 
-
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> GetUserVolunteerAssignments()
+        public IActionResult GetUserVolunteerAssignments()
         {
             try
             {
