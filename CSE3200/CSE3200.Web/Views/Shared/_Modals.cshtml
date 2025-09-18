@@ -1,0 +1,136 @@
+﻿<!-- Views/Shared/_Modals.cshtml -->
+<!-- DONATION MODAL -->
+<div class="modal fade" id="donationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Make a Donation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="donationForm">
+                <div class="modal-body">
+                    <input type="hidden" id="donationDisasterId" name="DisasterId" />
+                    <input type="hidden" id="donationDisasterTitle" name="DisasterTitle" />
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        You are donating to: <strong id="donationDisasterName"></strong>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Your Name *</label>
+                                <input type="text" class="form-control" name="DonorName" required>
+                                <div class="invalid-feedback">Please provide your name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="DonorEmail" required>
+                                <div class="invalid-feedback">Please provide a valid email</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" name="DonorPhone" required>
+                                <div class="invalid-feedback">Please provide your phone number</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Amount (BDT) *</label>
+                                <input type="number" class="form-control" name="Amount" min="1" required>
+                                <div class="invalid-feedback">Please enter a valid amount</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method *</label>
+                        <select class="form-select" name="PaymentMethod" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="bKash">bKash</option>
+                            <option value="Nagad">Nagad</option>
+                            <option value="BankTransfer">Bank Transfer</option>
+                            <option value="CreditCard">Credit Card</option>
+                        </select>
+                        <div class="invalid-feedback">Please select a payment method</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" name="Notes" rows="3" placeholder="Any additional notes or messages..."></textarea>
+                    </div>
+
+                    <div id="donationResult" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-credit-card me-1"></i> Proceed to Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Disaster Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="disasterDetails">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading disaster details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAP MODAL -->
+<div class="modal fade" id="mapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Disaster Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="mapContainer">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading map...</p>
+                    </div>
+                </div>
+                <div id="mapLocationInfo" class="mt-3 text-center"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="openInMaps" href="#" target="_blank" class="btn btn-primary">
+                    <i class="bi bi-geo-alt-fill me-1"></i> Open in Google Maps
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
