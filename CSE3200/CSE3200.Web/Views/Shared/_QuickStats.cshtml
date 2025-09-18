@@ -1,0 +1,32 @@
+﻿<!-- Views/Shared/_QuickStats.cshtml -->
+@model IList<Disaster>
+@using CSE3200.Domain.Entities
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">@Model.Count</div>
+                <div class="stats-label">Active Disasters</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(45deg, #fd7e14, #e66408);">
+                <div class="stats-number">@Model.Sum(d => d.AffectedPeople).ToString("N0")</div>
+                <div class="stats-label">People Affected</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(45deg, #198754, #0f5132);">
+                <div class="stats-number">@Model.Count(d => d.Severity == DisasterSeverity.Critical)</div>
+                <div class="stats-label">Critical Situations</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(45deg, #6f42c1, #5a2d9c);">
+                <div class="stats-number">@ViewBag.TotalDonations?.ToString("C0")</div>
+                <div class="stats-label">Total Donations</div>
+            </div>
+        </div>
+    </div>
+</div>
