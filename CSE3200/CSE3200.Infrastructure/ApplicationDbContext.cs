@@ -50,7 +50,7 @@ namespace CSE3200.Infrastructure
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseSqlServer(_connectionString,
-                    x => x.MigrationsAssembly(_migrationAssembly));
+                    x => x.MigrationsAssembly("CSE3200.Infrastructure")); // Use the variable but ensure it's correct
             }
             base.OnConfiguring(optionsBuilder);
         }
