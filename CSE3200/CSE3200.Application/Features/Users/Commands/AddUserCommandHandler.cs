@@ -29,7 +29,7 @@ namespace CSE3200.Application.Features.Users.Commands
                 LastName = request.LastName,
                 DateOfBirth = request.DateOfBirth,
                 RegistrationDate = DateTime.UtcNow,
-                //PhoneNumber = request.PhoneNumber
+                PhoneNumber = request.PhoneNumber
             };
 
             await _userStore.SetUserNameAsync(user, request.Email, cancellationToken);

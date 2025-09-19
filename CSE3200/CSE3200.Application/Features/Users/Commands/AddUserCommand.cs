@@ -2,6 +2,7 @@
 
 namespace CSE3200.Application.Features.Users.Commands
 {
+    // AddUserCommand.cs
     public class AddUserCommand : IRequest
     {
         public string FirstName { get; set; }
@@ -10,6 +11,6 @@ namespace CSE3200.Application.Features.Users.Commands
         public string Password { get; set; }
         public string Role { get; set; }
         public DateTime DateOfBirth { get; set; }
-      //  public string? PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; } // Uncomment and use
     }
 }
