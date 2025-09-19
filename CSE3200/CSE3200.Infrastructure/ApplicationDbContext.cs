@@ -22,6 +22,9 @@ namespace CSE3200.Infrastructure
         private readonly string _connectionString;
         private readonly string _migrationAssembly;
 
+
+
+        
         public DbSet<Product> Products { get; set; }
         public DbSet<Disaster> Disasters { get; set; }
         public DbSet<Donation> Donations { get; set; }
@@ -31,6 +34,8 @@ namespace CSE3200.Infrastructure
         public DbSet<FAQ> FAQs { get; set; }
 
         public DbSet<DisasterAlert> DisasterAlerts { get; set; }
+
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
 
 
@@ -160,6 +165,33 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(a => a.StartDate);
                 entity.HasIndex(a => a.EndDate);
                 entity.HasIndex(a => a.DisplayOrder);
+            });
+
+
+            // Add this after other entity configurations
+            builder.Entity<ChatMessage>(entity =>
+            {
+                entity.Property(cm => cm.Content).IsRequired().HasMaxLength(1000);
+                entity.Property(cm => cm.SentAt).IsRequired();
+                entity.Property(cm => cm.IsRead).IsRequired();
+                entity.Property(cm => cm.IsFromAdmin).IsRequired();
+
+                // We'll add foreign key relationships later once we fix the navigation properties
+                // entity.HasOne(cm => cm.Sender)
+                //       .WithMany()
+                //       .HasForeignKey(cm => cm.SenderId)
+                //       .OnDelete(DeleteBehavior.Restrict);
+
+                // entity.HasOne(cm => cm.Receiver)
+                //       .WithMany()
+                //       .HasForeignKey(cm => cm.ReceiverId)
+                //       .OnDelete(DeleteBehavior.Restrict);
+
+                // Indexes for better query performance
+                entity.HasIndex(cm => cm.SenderId);
+                entity.HasIndex(cm => cm.ReceiverId);
+                entity.HasIndex(cm => cm.SentAt);
+                entity.HasIndex(cm => cm.IsRead);
             });
         }
     }
