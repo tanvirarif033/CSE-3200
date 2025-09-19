@@ -5,6 +5,7 @@ using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
 using CSE3200.Web.Data;
+using CSE3200.Web.Hubs;
 using CSE3200.Web.Services;
 
 using Microsoft.AspNetCore.Authentication.Google; // for clarity
@@ -48,6 +49,10 @@ try
     // Razor Pages + MVC
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
+
+
+    // Add SignalR
+    builder.Services.AddSignalR();
 
     // Serilog
     builder.Host.UseSerilog((context, lc) => lc
@@ -131,6 +136,10 @@ try
         defaults: new { controller = "PublicFAQ", action = "Index" });
 
     app.MapRazorPages().WithStaticAssets();
+
+
+    // Add SignalR hub mapping
+    app.MapHub<ChatHub>("/chatHub");
 
     app.Run();
 
