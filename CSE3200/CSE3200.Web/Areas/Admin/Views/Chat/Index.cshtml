@@ -3,6 +3,9 @@
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
+<!-- Hidden field to store current user ID -->
+<input type="hidden" id="current-user-id" value="@ViewBag.CurrentUserId" />
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-4">
@@ -37,9 +40,225 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
-        // Basic chat functionality will be added here
-        console.log("Admin chat page loaded");
+        let connection = null;
+        let currentUserId = null;
+
+        // Initialize SignalR connection
+        function initSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // Handle incoming messages
+            connection.on("ReceiveMessage", (message) => {
+                addMessageToChat(message, false);
+            });
+
+            connection.on("AdminMessageSent", (message) => {
+                console.log("Admin message sent:", message);
+                // Refresh conversations when admin sends a message
+                loadConversations();
+            });
+
+            // Start connection
+            connection.start()
+                .then(() => {
+                    console.log("SignalR Connected");
+                    loadConversations();
+                })
+                .catch(err => console.error("SignalR Connection Error:", err));
+        }
+
+        // Load conversations list
+        async function loadConversations() {
+            try {
+                const response = await fetch('/api/chat/messages');
+                if (!response.ok) {
+                    throw new Error('Failed to load conversations');
+                }
+                const messages = await response.json();
+                updateConversationList(messages);
+            } catch (error) {
+                console.error("Error loading conversations:", error);
+            }
+        }
+
+        // Update conversation list UI
+        function updateConversationList(messages) {
+            const conversationList = document.getElementById('conversation-list');
+
+            if (messages.length === 0) {
+                conversationList.innerHTML = '<p class="text-muted">No conversations yet</p>';
+                return;
+            }
+
+            // Group messages by user
+            const userMessages = {};
+            messages.forEach(msg => {
+                const otherUserId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
+                if (otherUserId) {
+                    if (!userMessages[otherUserId]) {
+                        userMessages[otherUserId] = [];
+                    }
+                    userMessages[otherUserId].push(msg);
+                }
+            });
+
+            // Create conversation items
+            conversationList.innerHTML = '';
+            Object.keys(userMessages).forEach(userId => {
+                const userMsgs = userMessages[userId];
+                const lastMessage = userMsgs[userMsgs.length - 1];
+
+                const div = document.createElement('div');
+                div.className = 'conversation-item p-2 border-bottom';
+                div.innerHTML = `
+                    <div class="fw-bold">User: ${userId.substring(0, 8)}...</div>
+                    <div class="text-muted small">${lastMessage.content.substring(0, 30)}...</div>
+                    <div class="text-muted smaller">${new Date(lastMessage.sentAt).toLocaleTimeString()}</div>
+                `;
+                div.onclick = () => loadConversation(userId);
+                conversationList.appendChild(div);
+            });
+        }
+
+        // Load specific conversation
+        async function loadConversation(userId) {
+            try {
+                const response = await fetch(`/api/chat/messages?userId=${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load conversation');
+                }
+                const messages = await response.json();
+
+                document.getElementById('current-conversation').textContent = `Conversation with User: ${userId.substring(0, 8)}...`;
+                document.getElementById('message-input').disabled = false;
+                document.getElementById('send-button').disabled = false;
+
+                const chatMessages = document.getElementById('chat-messages');
+                chatMessages.innerHTML = '';
+
+                messages.forEach(msg => {
+                    addMessageToChat(msg, true);
+                });
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Store current conversation user ID
+                window.currentConversationUserId = userId;
+            } catch (error) {
+                console.error("Error loading conversation:", error);
+            }
+        }
+
+        // Add message to chat UI
+        function addMessageToChat(message, isHistorical) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${message.senderId === currentUserId ? 'message-sent' : 'message-received'}`;
+            messageDiv.innerHTML = `
+                <div class="message-content ${message.isFromAdmin ? 'admin-message' : ''}">
+                    <div class="message-text">${message.content}</div>
+                    <div class="message-time">${new Date(message.sentAt).toLocaleTimeString()}</div>
+                </div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+
+            if (!isHistorical) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+
+            if (!content || !window.currentConversationUserId) return;
+
+            try {
+                await connection.invoke("SendMessageToUser", window.currentConversationUserId, content);
+                input.value = '';
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert('Failed to send message: ' + error.message);
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get current user ID from hidden field
+            currentUserId = document.getElementById('current-user-id').value;
+            console.log('Current user ID:', currentUserId);
+
+            initSignalR();
+
+            // Set up send button
+            document.getElementById('send-button').onclick = sendMessage;
+
+            // Send on Enter key
+            document.getElementById('message-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        });
     </script>
+
+    <style>
+        .message {
+            margin-bottom: 10px;
+        }
+
+        .message-sent {
+            text-align: right;
+        }
+
+        .message-received {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 70%;
+        }
+
+        .message-sent .message-content {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .message-received .message-content {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+
+        .admin-message {
+            border: 2px solid #28a745;
+        }
+
+        .message-time {
+            font-size: 0.7em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .conversation-item:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        #chat-messages {
+            background-color: #fafafa;
+            border-radius: 5px;
+        }
+    </style>
 }
