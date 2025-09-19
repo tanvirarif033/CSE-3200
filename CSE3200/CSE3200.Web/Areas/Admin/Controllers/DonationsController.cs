@@ -141,5 +141,36 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+        // Add this method to your DonationsController class
+        public IActionResult PaymentHistory()
+        {
+            try
+            {
+                // Get all donations with disaster information
+                var donations = _donationService.GetDonations(1, int.MaxValue, "DonationDate DESC", new DataTablesSearch()).data
+                    .Where(d => !string.IsNullOrEmpty(d.PaymentStatus))
+                    .ToList();
+
+                // Calculate statistics for the view
+                ViewBag.TotalDonations = donations.Count;
+                ViewBag.TotalAmount = donations
+                    .Where(d => d.PaymentStatus == "Completed")
+                    .Sum(d => d.Amount);
+                ViewBag.CompletedDonations = donations
+                    .Count(d => d.PaymentStatus == "Completed");
+                ViewBag.PendingDonations = donations
+                    .Count(d => d.PaymentStatus == "Pending");
+                ViewBag.FailedDonations = donations
+                    .Count(d => d.PaymentStatus == "Failed");
+
+                return View(donations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading payment history");
+                TempData["ErrorMessage"] = "Error loading payment history";
+                return RedirectToAction(nameof(Index));
+            }
+        }
     }
 }

@@ -1,0 +1,71 @@
+﻿@model IList<CSE3200.Domain.Entities.Notification>
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>My Notifications</h5>
+                    <form asp-action="MarkAllAsRead" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            Mark all as read
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        foreach (var notification in Model)
+                        {
+                            <div class="notification-item p-3 mb-3 border rounded @(!notification.IsRead ? "bg-light border-primary" : "")">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 @(!notification.IsRead ? "text-primary fw-bold" : "")">@notification.Title</h6>
+                                        <p class="mb-1">@notification.Message</p>
+                                        <small class="text-muted">@notification.CreatedDate.ToString("g")</small>
+                                    </div>
+                                    @if (!notification.IsRead)
+                                    {
+                                        <form asp-action="MarkAsRead" method="post" class="ms-2">
+                                            <input type="hidden" name="id" value="@notification.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-lg"></i> Read
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                                @if (notification.RelatedEntityId.HasValue)
+                                {
+                                    <div class="mt-2 pt-2 border-top">
+                                        <a href="/Disaster/Details/@notification.RelatedEntityId"
+                                           class="btn btn-sm btn-primary">View Disaster Details</a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">No notifications found.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .notification-item {
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+    </style>
+}

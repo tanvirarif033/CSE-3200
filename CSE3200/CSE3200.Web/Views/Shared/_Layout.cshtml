@@ -9,9 +9,9 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CSE3200.Web.styles.css" asp-append-version="true" />
     <!-- In your _Layout.cshtml -->
- 
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-   
+
     @await RenderSectionAsync("Styles", required: false)
     @Html.AntiForgeryToken()
 </head>
@@ -19,7 +19,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CSE3200.Web</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RescueNet</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -42,8 +42,7 @@
                         @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
                         {
                             <li class="nav-item">
-   
-                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a> 
+                                <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Index">Disasters</a>
                             </li>
                         }
                         @if (User.IsInRole("Admin"))
@@ -61,6 +60,24 @@
                             </li>
                         }
                     </ul>
+
+                    <!-- Notification Bell -->
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-bell"></i>
+                                <span id="notificationBadge" class="badge bg-danger" style="display: none;"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><a class="dropdown-item" href="/Notification">View All Notifications</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="notificationManager.markAllAsRead()">Mark all as read</a></li>
+                            </ul>
+                        </li>
+                    }
+
                     <partial name="_LoginPartial" />
                 </div>
             </div>
@@ -70,6 +87,9 @@
     <!-- Disaster Alert Bar -->
     <partial name="~/Views/PublicDisasterAlert/AlertBar.cshtml" />
 
+    <!-- Toast container for notifications -->
+    <div id="notificationToasts" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -78,16 +98,19 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - CSE3200.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2025 - RescueNet - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <!-- Scripts: keep order = jQuery -> validate -> unobtrusive -> bootstrap -> site -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
-
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- SignalR and Notification Scripts -->
+    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
+    <script src="~/js/notification.js"></script>
+
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/homepage.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)

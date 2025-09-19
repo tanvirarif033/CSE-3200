@@ -1,5 +1,5 @@
-﻿@{
-    ViewData["Title"] = "Donation Management";
+﻿﻿@{
+ViewData["Title"] = "Donation Management";
 }
 
 @section Styles {
@@ -84,6 +84,9 @@
                     <a href="@Url.Action("Statistics")" class="btn btn-outline-info btn-sm">
                         <i class="bi bi-graph-up"></i> Statistics
                     </a>
+                    <a href="@Url.Action("PaymentHistory")" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-credit-card"></i> Payment History
+                    </a>
                 </div>
             </div>
             <div class="card-body">
@@ -156,7 +159,8 @@
                         data: "paymentStatus",
                         name: "PaymentStatus",
                         render: function (data, type, row) {
-                            var badgeClass = data === 'Completed' ? 'badge bg-success' : 'badge bg-warning';
+                            var badgeClass = data === 'Completed' ? 'badge bg-success' :
+                                            data === 'Pending' ? 'badge bg-warning' : 'badge bg-danger';
                             return `<span class="${badgeClass}">${data}</span>`;
                         }
                     },

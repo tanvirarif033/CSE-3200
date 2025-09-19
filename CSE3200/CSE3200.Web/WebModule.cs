@@ -109,6 +109,13 @@ namespace CSE3200.Web
             builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
             builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
             builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
+
+            // Add these registrations in the Load method:
+            builder.RegisterType<NotificationRepository>().As<INotificationRepository>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<NotificationService>().As<INotificationService>()
+                .InstancePerLifetimeScope();
         }
     }
 }

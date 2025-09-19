@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
+using System.Collections.Generic;
+using CSE3200.Domain.Entities;
 
 namespace CSE3200.Infrastructure.Identity
 {
@@ -9,7 +11,13 @@ namespace CSE3200.Infrastructure.Identity
         public string? LastName { get; set; }
         public DateTime RegistrationDate { get; set; }
         public DateTime DateOfBirth { get; set; }
-        //public string? PhoneNumber { get; set; }
 
+        // Navigation property for notifications
+        public virtual ICollection<Notification> Notifications { get; set; }
+
+        public ApplicationUser()
+        {
+            Notifications = new HashSet<Notification>();
+        }
     }
 }

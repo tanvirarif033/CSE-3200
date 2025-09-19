@@ -25,6 +25,7 @@ namespace CSE3200.Infrastructure
         public DbSet<Product> Products { get; set; }
         public DbSet<Disaster> Disasters { get; set; }
         public DbSet<Donation> Donations { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public DbSet<VolunteerAssignment> VolunteerAssignments { get; set; }
 
@@ -160,6 +161,23 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(a => a.StartDate);
                 entity.HasIndex(a => a.EndDate);
                 entity.HasIndex(a => a.DisplayOrder);
+            });
+
+            builder.Entity<Notification>(entity =>
+            {
+                entity.Property(n => n.Title).IsRequired().HasMaxLength(200);
+                entity.Property(n => n.Message).IsRequired();
+                entity.Property(n => n.Type).IsRequired();
+                entity.Property(n => n.IsRead).IsRequired();
+                entity.Property(n => n.CreatedDate).IsRequired();
+                entity.Property(n => n.RelatedEntityType).HasMaxLength(100);
+                entity.Property(n => n.UserId).IsRequired().HasMaxLength(450);
+
+                // Indexes
+                entity.HasIndex(n => n.UserId);
+                entity.HasIndex(n => n.IsRead);
+                entity.HasIndex(n => n.CreatedDate);
+                entity.HasIndex(n => n.RelatedEntityId);
             });
         }
     }

@@ -1,0 +1,387 @@
+﻿@model IList<Donation>
+@using CSE3200.Domain.Entities
+@using CSE3200.Domain.Services
+@inject IDisasterService DisasterService
+
+@{
+    ViewData["Title"] = "Payment History";
+
+    // Create a dictionary to cache disaster titles
+    var disasterTitles = new Dictionary<Guid, string>();
+    foreach (var donation in Model)
+    {
+        if (donation.DisasterId != Guid.Empty && !disasterTitles.ContainsKey(donation.DisasterId))
+        {
+            var disaster = DisasterService.GetDisaster(donation.DisasterId);
+            disasterTitles[donation.DisasterId] = disaster?.Title ?? "N/A";
+        }
+    }
+}
+
+@section Styles {
+    <style>
+        .app-content-header {
+            background: linear-gradient(45deg, #1f1f2e, #2c2c3d);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #fff;
+            border-radius: 0.5rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(45deg, #3f51b5, #303f9f);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .donation-status-completed {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .donation-status-pending {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .donation-status-failed {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .total-amount-card {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+    </style>
+}
+
+<!-- Begin::Page Header -->
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Payment History</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Donations">Donations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Payment History</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Begin::Main Content -->
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-number">@ViewBag.TotalDonations</div>
+                    <div class="stats-label">Total Transactions</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                    <div class="stats-number">@ViewBag.CompletedDonations</div>
+                    <div class="stats-label">Completed</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(45deg, #fd7e14, #e66408);">
+                    <div class="stats-number">@ViewBag.PendingDonations</div>
+                    <div class="stats-label">Pending</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(45deg, #dc3545, #c82333);">
+                    <div class="stats-number">@ViewBag.FailedDonations</div>
+                    <div class="stats-label">Failed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card total-amount-card">
+                    <div class="card-body text-center py-3">
+                        <h4 class="mb-0">Total Amount Collected: @ViewBag.TotalAmount?.ToString("C")</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="statusFilter">Payment Status</label>
+                            <select id="statusFilter" class="form-control">
+                                <option value="">All Statuses</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Failed">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="dateFromFilter">Date From</label>
+                            <input type="date" id="dateFromFilter" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="dateToFilter">Date To</label>
+                            <input type="date" id="dateToFilter" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="searchFilter">Search</label>
+                            <input type="text" id="searchFilter" class="form-control" placeholder="Search...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Any())
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">All Payment Transactions</h5>
+                    <div class="btn-group">
+                        <button id="exportBtn" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-download"></i> Export CSV
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i> Back to Donations
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="paymentHistoryTable" class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Donor Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                    <th>Transaction ID</th>
+                                    <th>Disaster</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var donation in Model.OrderByDescending(d => d.DonationDate))
+                                {
+                                    <tr>
+                                        <td>@donation.DonationDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                        <td>@donation.DonorName</td>
+                                        <td>@donation.DonorEmail</td>
+                                        <td>@donation.DonorPhone</td>
+                                        <td>@donation.Amount.ToString("C")</td>
+                                        <td>
+                                            <span class="badge bg-secondary">@donation.PaymentMethod</span>
+                                        </td>
+                                        <td>
+                                            @{
+                                                var statusClass = donation.PaymentStatus == "Completed" ? "donation-status-completed" :
+                                                donation.PaymentStatus == "Pending" ? "donation-status-pending" : "donation-status-failed";
+                                            }
+                                            <span class="@statusClass">
+                                                @donation.PaymentStatus
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(donation.TransactionId))
+                                            {
+                                                <code>@donation.TransactionId</code>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (donation.Disaster != null)
+                                            {
+                                                <strong>@donation.Disaster.Title</strong>
+                                            }
+                                            else if (donation.DisasterId != Guid.Empty && disasterTitles.ContainsKey(donation.DisasterId))
+                                            {
+                                                <strong>@disasterTitles[donation.DisasterId]</strong>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a href="/Admin/Donations/Details/@donation.Id" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-credit-card display-1 text-muted"></i>
+                    <h3 class="mt-3">No Payment History</h3>
+                    <p class="text-muted">No payment transactions found.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-primary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Donations
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var table = $('#paymentHistoryTable').DataTable({
+                dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        className: 'btn btn-sm btn-outline-secondary'
+                    },
+                    {
+                        extend: 'csv',
+                        className: 'btn btn-sm btn-outline-primary'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn btn-sm btn-outline-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        className: 'btn btn-sm btn-outline-danger'
+                    },
+                    {
+                        extend: 'print',
+                        className: 'btn btn-sm btn-outline-info'
+                    }
+                ],
+                pageLength: 25,
+                order: [[0, 'desc']],
+                responsive: true,
+                autoWidth: false
+            });
+
+            // Apply filters
+            $('#statusFilter, #dateFromFilter, #dateToFilter, #searchFilter').on('change keyup', function () {
+                var status = $('#statusFilter').val();
+                var dateFrom = $('#dateFromFilter').val();
+                var dateTo = $('#dateToFilter').val();
+                var search = $('#searchFilter').val();
+
+                // Filter by status
+                if (status) {
+                    table.column(6).search(status).draw();
+                } else {
+                    table.column(6).search('').draw();
+                }
+
+                // Filter by date range
+                if (dateFrom || dateTo) {
+                    $.fn.dataTable.ext.search.push(
+                        function (settings, data, dataIndex) {
+                            var min = dateFrom ? new Date(dateFrom) : null;
+                            var max = dateTo ? new Date(dateTo + 'T23:59:59') : null;
+                            var date = new Date(data[0]); // Date is in first column
+
+                            if ((min === null && max === null) ||
+                                (min === null && date <= max) ||
+                                (min <= date && max === null) ||
+                                (min <= date && date <= max)) {
+                                return true;
+                            }
+                            return false;
+                        }
+                    );
+                    table.draw();
+                    $.fn.dataTable.ext.search.pop(); // Remove the function after filtering
+                }
+
+                // General search
+                if (search) {
+                    table.search(search).draw();
+                } else {
+                    table.search('').draw();
+                }
+            });
+
+            // Export button
+            $('#exportBtn').on('click', function () {
+                // Create a CSV content
+                var csvContent = "Date,Donor Name,Email,Phone,Amount,Payment Method,Status,Transaction ID,Disaster\n";
+
+                table.rows({ search: 'applied' }).every(function () {
+                    var data = this.data();
+                    csvContent += `"${data[0]}","${data[1]}","${data[2]}","${data[3]}","${data[4]}","${data[5]}","${data[6]}","${data[7]}","${data[8]}"\n`;
+                });
+
+                // Create download link
+                var encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "payment_history_" + new Date().toISOString().slice(0, 10) + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            if ('@TempData["SuccessMessage"]' !== '') {
+                toastr.success('@TempData["SuccessMessage"]');
+            }
+
+            if ('@TempData["ErrorMessage"]' !== '') {
+                toastr.error('@TempData["ErrorMessage"]');
+            }
+        });
+    </script>
+}
