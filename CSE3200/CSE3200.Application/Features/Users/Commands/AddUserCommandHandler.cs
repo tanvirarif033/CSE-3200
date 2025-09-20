@@ -19,6 +19,7 @@ namespace CSE3200.Application.Features.Users.Commands
             _userManager = userManager;
             _userStore = userStore;
             _emailStore = (IUserEmailStore<ApplicationUser>)_userStore;
+
         }
 
         public async Task Handle(AddUserCommand request, CancellationToken cancellationToken)
@@ -29,7 +30,8 @@ namespace CSE3200.Application.Features.Users.Commands
                 LastName = request.LastName,
                 DateOfBirth = request.DateOfBirth,
                 RegistrationDate = DateTime.UtcNow,
-                PhoneNumber = request.PhoneNumber
+                PhoneNumber = request.PhoneNumber,
+                 ProfilePictureUrl = request.ProfilePictureUrl
             };
 
             await _userStore.SetUserNameAsync(user, request.Email, cancellationToken);

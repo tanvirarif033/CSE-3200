@@ -1,10 +1,10 @@
-﻿using CSE3200.Domain.Entities;
+﻿// IVolunteerAssignmentService.cs (in CSE3200.Domain.Services namespace)
+using CSE3200.Domain.Entities;
 using System;
 using System.Collections.Generic;
 
 namespace CSE3200.Domain.Services
 {
-    // IVolunteerAssignmentService.cs
     public interface IVolunteerAssignmentService
     {
         void AssignVolunteer(VolunteerAssignment assignment);
@@ -28,7 +28,7 @@ namespace CSE3200.Domain.Services
         IList<DisasterVolunteerStats> GetDisasterVolunteerStats(Guid disasterId);
     }
 
-    // Add these supporting classes
+    // Supporting classes
     public class VolunteerAssignmentStats
     {
         public string VolunteerUserId { get; set; }

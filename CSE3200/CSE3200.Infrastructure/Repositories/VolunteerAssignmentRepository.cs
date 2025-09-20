@@ -59,6 +59,8 @@ namespace CSE3200.Infrastructure.Repositories
             );
         }
 
+
+
         // Implement the new interface methods
         public IList<VolunteerAssignment> GetAssignmentsByStatus(string status)
         {
@@ -123,7 +125,9 @@ namespace CSE3200.Infrastructure.Repositories
 
             return assignmentsWithUsers;
         }
+
     }
+
 
     // Helper class for assignments with user info
     public class VolunteerAssignmentWithUserInfo

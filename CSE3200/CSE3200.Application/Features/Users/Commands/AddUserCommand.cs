@@ -12,5 +12,6 @@ namespace CSE3200.Application.Features.Users.Commands
         public string Role { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string? PhoneNumber { get; set; } // Uncomment and use
+        public string? ProfilePictureUrl { get; set; } // Add this property
     }
 }
