@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace CSE3200.Web.Areas.Admin.Controllers
 {
@@ -29,7 +30,34 @@ namespace CSE3200.Web.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            try
+            {
+                // Get all donations with disaster information
+                var donationsResult = _donationService.GetDonations(1, int.MaxValue, "DonationDate DESC", new DataTablesSearch());
+                var donations = donationsResult.data
+                    .Where(d => !string.IsNullOrEmpty(d.PaymentStatus))
+                    .ToList();
+
+                // Calculate statistics for the view
+                ViewBag.TotalDonations = donations.Count;
+                ViewBag.TotalAmount = donations
+                    .Where(d => d.PaymentStatus == "Completed")
+                    .Sum(d => d.Amount);
+                ViewBag.CompletedDonations = donations
+                    .Count(d => d.PaymentStatus == "Completed");
+                ViewBag.PendingDonations = donations
+                    .Count(d => d.PaymentStatus == "Pending");
+                ViewBag.FailedDonations = donations
+                    .Count(d => d.PaymentStatus == "Failed");
+
+                return View(donations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading payment history");
+                TempData["ErrorMessage"] = "Error loading payment history";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [HttpPost]
@@ -92,52 +120,6 @@ namespace CSE3200.Web.Areas.Admin.Controllers
             {
                 _logger.LogError(ex, "Error loading donation details");
                 TempData["ErrorMessage"] = "Error loading donation details";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        public IActionResult Export()
-        {
-            try
-            {
-                var donations = _donationService.GetDonations(1, 1000, "DonationDate DESC", new DataTablesSearch()).data;
-
-                // Here you would implement CSV or Excel export logic
-                // For now, return a view with all donations
-                return View("Export", donations);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error exporting donations");
-                TempData["ErrorMessage"] = "Error exporting donations";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        public IActionResult Statistics()
-        {
-            try
-            {
-                var totalDonations = _donationService.GetDonations(1, 1000, "", new DataTablesSearch()).data
-                    .Where(d => d.PaymentStatus == "Completed")
-                    .Sum(d => d.Amount);
-
-                var recentDonations = _donationService.GetRecentDonations(10);
-                var totalDonors = _donationService.GetDonations(1, 1000, "", new DataTablesSearch()).data
-                    .Select(d => d.DonorEmail)
-                    .Distinct()
-                    .Count();
-
-                ViewBag.TotalDonations = totalDonations;
-                ViewBag.TotalDonors = totalDonors;
-                ViewBag.RecentDonations = recentDonations;
-
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading donation statistics");
-                TempData["ErrorMessage"] = "Error loading statistics";
                 return RedirectToAction(nameof(Index));
             }
         }
