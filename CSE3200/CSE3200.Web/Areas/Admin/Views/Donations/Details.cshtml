@@ -1,0 +1,241 @@
+﻿@model Donation
+@using CSE3200.Domain.Entities
+@using CSE3200.Domain.Services
+@inject IDisasterService DisasterService
+
+@{
+    ViewData["Title"] = "Donation Details";
+
+    // Get disaster details if not already loaded
+    Disaster disaster = null;
+    if (Model.DisasterId != Guid.Empty)
+    {
+        disaster = DisasterService.GetDisaster(Model.DisasterId);
+    }
+}
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h3 class="mb-0">Donation Details</h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Donations">Donations</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Donation Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donation ID:</label>
+                            <p class="mb-0">@Model.Id</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Date:</label>
+                            <p class="mb-0">@Model.DonationDate.ToString("yyyy-MM-dd HH:mm")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Amount:</label>
+                            <p class="mb-0">@Model.Amount.ToString("C")</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Method:</label>
+                            <p class="mb-0">@Model.PaymentMethod</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status:</label>
+                            <p class="mb-0">
+                                @{
+                                    var statusClass = Model.PaymentStatus == "Completed" ? "text-success fw-bold" :
+                                    Model.PaymentStatus == "Pending" ? "text-warning fw-bold" : "text-danger fw-bold";
+                                }
+                                <span class="@statusClass">@Model.PaymentStatus</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Transaction ID:</label>
+                            <p class="mb-0">@(Model.TransactionId ?? "N/A")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Disaster Information:</label>
+                            @if (Model.Disaster != null)
+                            {
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <p class="card-text mb-1"><strong>Disaster Title:</strong> @Model.Disaster.Title</p>
+                                        <p class="card-text mb-1"><strong>Location:</strong> @Model.Disaster.Location</p>
+                                        <p class="card-text mb-1"><strong>Date Occurred:</strong> @Model.Disaster.OccurredDate.ToString("yyyy-MM-dd")</p>
+                                        <p class="card-text mb-1"><strong>Severity:</strong> @Model.Disaster.Severity</p>
+                                        <p class="card-text mb-0"><strong>Affected People:</strong> @Model.Disaster.AffectedPeople</p>
+                                    </div>
+                                </div>
+                            }
+                            else if (disaster != null)
+                            {
+                                <div class="card mt-2">
+                                    <div class="card-body">
+                                        <p class="card-text mb-1"><strong>Disaster Title:</strong> @disaster.Title</p>
+                                        <p class="card-text mb-1"><strong>Location:</strong> @disaster.Location</p>
+                                        <p class="card-text mb-1"><strong>Date Occurred:</strong> @disaster.OccurredDate.ToString("yyyy-MM-dd")</p>
+                                        <p class="card-text mb-1"><strong>Severity:</strong> @disaster.Severity</p>
+                                        <p class="card-text mb-0"><strong>Affected People:</strong> @disaster.AffectedPeople</p>
+                                    </div>
+                                </div>
+                            }
+                            else if (Model.DisasterId != Guid.Empty)
+                            {
+                                <p class="mb-0 text-muted">
+                                    Disaster ID: @Model.DisasterId.ToString().Substring(0, 8)...
+                                    <br>
+                                    <small>Disaster details not available</small>
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted">No disaster associated with this donation</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donor Name:</label>
+                            <p class="mb-0">@Model.DonorName</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donor Email:</label>
+                            <p class="mb-0">@Model.DonorEmail</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Donor Phone:</label>
+                            <p class="mb-0">@Model.DonorPhone</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">User ID:</label>
+                            <p class="mb-0">@(Model.DonorUserId ?? "Guest Donation")</p>
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Notes:</label>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <p class="mb-0">@Model.Notes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Additional Actions -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            @if (Model.PaymentStatus == "Pending")
+                            {
+                                <form asp-action="UpdatePaymentStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="status" value="Completed" />
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Mark as Completed
+                                    </button>
+                                </form>
+                                <form asp-action="UpdatePaymentStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@Model.Id" />
+                                    <input type="hidden" name="status" value="Failed" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-x-circle"></i> Mark as Failed
+                                    </button>
+                                </form>
+                            }
+                            <a href="mailto:@Model.DonorEmail" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-envelope"></i> Email Donor
+                            </a>
+                            <button class="btn btn-outline-info btn-sm" onclick="window.print()">
+                                <i class="bi bi-printer"></i> Print Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .btn-group .btn {
+            margin-right: 0.5rem;
+        }
+
+        @@media print {
+            .app-content-header, .card-header, .btn-group, .btn {
+                display: none !important;
+            }
+
+            .card {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+}
