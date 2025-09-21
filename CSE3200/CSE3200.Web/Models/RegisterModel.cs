@@ -39,15 +39,17 @@ namespace CSE3200.Web.Models
         [Display(Name = "Phone Number")]
         public string PhoneNumber { get; set; }
 
-        // Profile picture upload (not stored in model, handled separately)
+        // Make ProfilePicture optional since you commented it out in the view
         [Display(Name = "Profile Picture")]
-        public IFormFile ProfilePicture { get; set; }
+        public IFormFile? ProfilePicture { get; set; } // Make nullable
 
         // Hidden field for role - defaults to "Donor" for public registration
         [HiddenInput]
         public string Role { get; set; } = "Donor";
 
-        public string ReturnUrl { get; set; }
-        public IList<AuthenticationScheme> ExternalLogins { get; set; }
+        public string? ReturnUrl { get; set; }
+
+        // Make ExternalLogins not required for form submission
+        public IList<AuthenticationScheme>? ExternalLogins { get; set; }
     }
 }

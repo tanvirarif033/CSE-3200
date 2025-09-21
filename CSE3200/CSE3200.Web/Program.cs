@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSE3200.Application.Features.Products.Commands;
+using CSE3200.Application.Services;
 using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
@@ -90,6 +91,8 @@ try
     // REMOVE THESE LINES - They are already registered in WebModule
     // builder.Services.AddScoped<IOtpService, OtpService>();
     // builder.Services.AddTransient<IEmailSender, EmailSender>();
+    // Add ImageService
+    builder.Services.AddScoped<IImageService, ImageService>();
 
     var app = builder.Build();
 
@@ -129,6 +132,12 @@ try
         name: "faq",
         pattern: "faq",
         defaults: new { controller = "PublicFAQ", action = "Index" });
+
+    // Add these routes
+    app.MapControllerRoute(
+        name: "profile",
+        pattern: "profile/{action=Index}/{id?}",
+        defaults: new { controller = "Profile" });
 
     app.MapRazorPages().WithStaticAssets();
 
