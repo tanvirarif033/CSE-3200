@@ -6,7 +6,6 @@ using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
 using CSE3200.Web.Data;
-using CSE3200.Web.Hubs;
 using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +13,10 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
+
+// --- Added for SignalR/ChatHub (merge) ---
+using CSE3200.Web.Hubs;
+// -----------------------------------------
 
 // Bootstrap Logger
 var configuration = new ConfigurationBuilder()
@@ -42,22 +45,23 @@ try
         containerBuilder.RegisterModule(new WebModule(connectionString, migrationAssembly?.FullName));
     });
 
-    // DbContext Registration (IMPORTANT: Keep this before Autofac configuration)
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString, x => x.MigrationsAssembly(migrationAssembly.FullName)));
-
+         options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     // Razor Pages + MVC
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
 
-    // Add SignalR with proper configuration
+    // --- Added: SignalR (merge) ---
     builder.Services.AddSignalR(options =>
     {
         options.EnableDetailedErrors = true;
-        options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1 MB
     });
+    // Register ChatHub with DI so it can get scoped services like DbContext
+    builder.Services.AddScoped<ChatHub>();
+    // ------------------------------
 
     // Serilog
     builder.Host.UseSerilog((context, lc) => lc
@@ -92,28 +96,18 @@ try
     // Add email configuration
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
-
-    // Register services
-    builder.Services.AddScoped<IOtpService, OtpService>();
-    builder.Services.AddTransient<IEmailSender, EmailSender>();
-
-
     // Add HttpClient factory
     builder.Services.AddHttpClient();
 
     // Register Maps Service as a typed client
     builder.Services.AddHttpClient<IMapsService, GoogleMapsService>();
 
-
     // REMOVE THESE LINES - They are already registered in WebModule
     // builder.Services.AddScoped<IOtpService, OtpService>();
     // builder.Services.AddTransient<IEmailSender, EmailSender>();
+
     // Add ImageService
     builder.Services.AddScoped<IImageService, ImageService>();
-
-    // Register ChatHub with DI (IMPORTANT: This ensures DbContext is available in ChatHub)
-    builder.Services.AddScoped<ChatHub>();
-
 
     var app = builder.Build();
 
@@ -121,6 +115,8 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
+
+        // --- Optional: keep dev experience from second file without changing existing flow ---
         app.UseDeveloperExceptionPage();
     }
     else
@@ -130,11 +126,7 @@ try
     }
 
     app.UseHttpsRedirection();
-
-
-
-    app.UseStaticFiles();
-
+    app.UseStaticFiles(); // Add this for serving static files (images, CSS, JS)
     app.UseRouting();
 
     // Order matters
@@ -143,7 +135,6 @@ try
 
     app.MapStaticAssets();
 
-    // Map Controllers
     app.MapControllerRoute(
         name: "areas",
         pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
@@ -168,30 +159,13 @@ try
 
     app.MapRazorPages().WithStaticAssets();
 
-    // Add SignalR hub mapping (IMPORTANT: This should be after authorization)
+    // --- Added: SignalR hub mapping (merge) ---
     app.MapHub<ChatHub>("/chatHub");
+    // ------------------------------------------
 
-    // Log all mapped endpoints for debugging
-    app.Use(async (context, next) =>
-    {
-        if (context.Request.Path.StartsWithSegments("/debug-endpoints"))
-        {
-            await context.Response.WriteAsync("Endpoints mapped successfully");
-            return;
-        }
-        await next();
-    });
-
-    // Ensure database is created and migrations are applied
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await dbContext.Database.EnsureCreatedAsync();
-        Log.Information("Database ensured created.");
-    }
+    app.Run();
 
     Log.Information("Application started successfully.");
-    app.Run();
 }
 catch (Exception ex)
 {
