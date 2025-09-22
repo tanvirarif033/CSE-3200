@@ -7,15 +7,14 @@ using CSE3200.Web;
 using CSE3200.Web.Data;
 using CSE3200.Web.Hubs;
 using CSE3200.Web.Services;
-
-using Microsoft.AspNetCore.Authentication.Google; // for clarity
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
-//  Bootstrap Logger
+// Bootstrap Logger
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -35,24 +34,29 @@ try
                            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     var migrationAssembly = Assembly.GetExecutingAssembly();
 
-    //  Autofac
+    // Autofac
     builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
     builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
     {
         containerBuilder.RegisterModule(new WebModule(connectionString, migrationAssembly?.FullName));
     });
 
+    // DbContext Registration (IMPORTANT: Keep this before Autofac configuration)
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-         options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
+        options.UseSqlServer(connectionString, x => x.MigrationsAssembly(migrationAssembly.FullName)));
+
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     // Razor Pages + MVC
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
 
-
-    // Add SignalR
-    builder.Services.AddSignalR();
+    // Add SignalR with proper configuration
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = true;
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+    });
 
     // Serilog
     builder.Host.UseSerilog((context, lc) => lc
@@ -68,18 +72,17 @@ try
         cfg.RegisterServicesFromAssembly(typeof(AddProductCommand).Assembly);
     });
 
-    // Identity (??????? ?????????)
+    // Identity
     builder.Services.AddIdentity();
     builder.Services.AddPolicy();
 
-    // ? Google Authentication — ?? ?????? ?????? Build() ?? ???
+    // Google Authentication
     builder.Services
         .AddAuthentication()
         .AddGoogle(options =>
         {
             options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
             options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-            // ?????: options.AuthorizationEndpoint += "?prompt=select_account";
         });
 
     // Add distributed cache (memory cache for development)
@@ -91,12 +94,15 @@ try
     // Register services
     builder.Services.AddScoped<IOtpService, OtpService>();
     builder.Services.AddTransient<IEmailSender, EmailSender>();
-    // Add HttpClient factory (you already have this, keep it)
+
+    // Add HttpClient factory
     builder.Services.AddHttpClient();
 
-    // Register Maps Service as a typed client (FIX)
+    // Register Maps Service as a typed client
     builder.Services.AddHttpClient<IMapsService, GoogleMapsService>();
 
+    // Register ChatHub with DI (IMPORTANT: This ensures DbContext is available in ChatHub)
+    builder.Services.AddScoped<ChatHub>();
 
     var app = builder.Build();
 
@@ -104,6 +110,7 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
+        app.UseDeveloperExceptionPage();
     }
     else
     {
@@ -112,6 +119,7 @@ try
     }
 
     app.UseHttpsRedirection();
+    app.UseStaticFiles();
     app.UseRouting();
 
     // Order matters
@@ -120,6 +128,7 @@ try
 
     app.MapStaticAssets();
 
+    // Map Controllers
     app.MapControllerRoute(
         name: "areas",
         pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
@@ -129,6 +138,7 @@ try
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
         .WithStaticAssets();
+
     // Add public FAQ route
     app.MapControllerRoute(
         name: "faq",
@@ -137,13 +147,30 @@ try
 
     app.MapRazorPages().WithStaticAssets();
 
-
-    // Add SignalR hub mapping
+    // Add SignalR hub mapping (IMPORTANT: This should be after authorization)
     app.MapHub<ChatHub>("/chatHub");
 
-    app.Run();
+    // Log all mapped endpoints for debugging
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/debug-endpoints"))
+        {
+            await context.Response.WriteAsync("Endpoints mapped successfully");
+            return;
+        }
+        await next();
+    });
+
+    // Ensure database is created and migrations are applied
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.EnsureCreatedAsync();
+        Log.Information("Database ensured created.");
+    }
 
     Log.Information("Application started successfully.");
+    app.Run();
 }
 catch (Exception ex)
 {
