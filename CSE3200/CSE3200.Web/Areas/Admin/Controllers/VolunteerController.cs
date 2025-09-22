@@ -398,5 +398,165 @@ namespace CSE3200.Web.Areas.Admin.Controllers
                 return new List<VolunteerUser>();
             }
         }
+
+        // GET: Admin/AdminVolunteer/PendingRequests
+        public async Task<IActionResult> PendingRequests()
+        {
+            var pendingUsers = await _userManager.Users
+                .Where(u => u.IsVolunteerRequested && u.VolunteerRequestStatus == "Pending")
+                .ToListAsync();
+
+            var model = pendingUsers.Select(u => new VolunteerRequestViewModel
+            {
+                UserId = u.Id.ToString(),
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Skills = u.Skills,
+                EmergencyContactName = u.EmergencyContactName,
+                EmergencyContactPhone = u.EmergencyContactPhone,
+                RequestDate = u.RegistrationDate
+            }).ToList();
+
+            return View(model);
+        }
+
+        // POST: Admin/AdminVolunteer/ApproveRequest
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveRequest(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                // Add user to Volunteer role
+                var addToRoleResult = await _userManager.AddToRoleAsync(user, "Volunteer");
+                if (!addToRoleResult.Succeeded)
+                {
+                    throw new Exception("Failed to add user to Volunteer role");
+                }
+
+                // Update volunteer request status
+                user.VolunteerRequestStatus = "Approved";
+                var updateResult = await _userManager.UpdateAsync(user);
+
+                if (updateResult.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"Volunteer request for {user.FirstName} {user.LastName} approved successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error updating volunteer status.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error approving volunteer request for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Error approving volunteer request.";
+            }
+
+            return RedirectToAction(nameof(PendingRequests));
+        }
+
+        // POST: Admin/AdminVolunteer/RejectRequest
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectRequest(string userId, string reason)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                // Update volunteer request status
+                user.IsVolunteerRequested = false;
+                user.VolunteerRequestStatus = $"Rejected: {reason}";
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"Volunteer request for {user.FirstName} {user.LastName} rejected.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error rejecting volunteer request.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting volunteer request for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Error rejecting volunteer request.";
+            }
+
+            return RedirectToAction(nameof(PendingRequests));
+        }
+
+        // GET: Admin/AdminVolunteer/ManageVolunteers
+        public async Task<IActionResult> ManageVolunteers()
+        {
+            var volunteers = await _userManager.GetUsersInRoleAsync("Volunteer");
+
+            var model = volunteers.Select(u => new VolunteerManagementViewModel
+            {
+                UserId = u.Id.ToString(),
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                PhoneNumber = u.PhoneNumber,
+                Skills = u.Skills,
+                IsActive = u.VolunteerRequestStatus == "Approved",
+                RegistrationDate = u.RegistrationDate
+            }).ToList();
+
+            return View(model);
+        }
+
+        // POST: Admin/AdminVolunteer/RemoveVolunteer
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveVolunteer(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                // Remove from Volunteer role
+                var removeResult = await _userManager.RemoveFromRoleAsync(user, "Volunteer");
+                if (removeResult.Succeeded)
+                {
+                    // Reset volunteer status
+                    user.IsVolunteerRequested = false;
+                    user.VolunteerRequestStatus = "Removed by Admin";
+                    await _userManager.UpdateAsync(user);
+
+                    TempData["SuccessMessage"] = $"Volunteer {user.FirstName} {user.LastName} removed successfully!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Error removing volunteer role.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing volunteer role for user {UserId}", userId);
+                TempData["ErrorMessage"] = "Error removing volunteer.";
+            }
+
+            return RedirectToAction(nameof(ManageVolunteers));
+        }
+
     }
 }

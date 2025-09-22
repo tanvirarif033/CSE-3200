@@ -27,5 +27,15 @@ namespace CSE3200.Domain.Entities
 
         [MaxLength(20)]
         public string Status { get; set; } = "Assigned"; // Assigned, Completed, Cancelled
+
+        // Add new fields for better tracking
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+
+        [MaxLength(500)]
+        public string Notes { get; set; } = string.Empty;
+
+        public int EstimatedHours { get; set; }
+        public int ActualHours { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace CSE3200.Application.Features.Users.Queries
         public async Task<(IList<ApplicationUser> data, int total, int totalDisplay)> Handle(
             GetUsersListQuery request, CancellationToken cancellationToken)
         {
-            // Start with base user query
+            // Start with base user query - Remove the Include for UserRoles
             IQueryable<ApplicationUser> baseQuery = _context.Users.AsQueryable();
 
             // Apply role filter if specified
@@ -51,7 +51,6 @@ namespace CSE3200.Application.Features.Users.Queries
             // Get total count before pagination
             var total = await distinctQuery.CountAsync(cancellationToken);
 
- 
             // Apply ordering
             IOrderedQueryable<ApplicationUser> orderedQuery;
             if (!string.IsNullOrEmpty(request.Order))

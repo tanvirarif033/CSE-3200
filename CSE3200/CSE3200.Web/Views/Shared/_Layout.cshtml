@@ -19,7 +19,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CSE3200.Web</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RescueNet</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -39,7 +39,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Contact">Contact</a>
                         </li>
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
+                        @* @if (User.IsInRole("Admin") || User.IsInRole("Field Representative"))
                         {
                             <li class="nav-item">
    
@@ -51,7 +51,7 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">Approvals</a>
                             </li>
-                        }
+                        } *@
                         @if (User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
@@ -60,6 +60,34 @@
                                 </a>
                             </li>
                         }
+                        <!-- For regular users -->
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person"></i> My Profile
+                                </a>
+                            </li>
+                        }
+
+                        @* <!-- For Admin users -->
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear"></i> Admin
+                                </a>
+                                <div class="dropdown-menu">
+                                    <!-- Corrected controller name from "AdminVolunteer" to "Volunteer" -->
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Volunteer" asp-action="PendingRequests">
+                                        <i class="bi bi-people"></i> Volunteer Requests
+                                    </a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Volunteer" asp-action="ManageVolunteers">
+                                        <i class="bi bi-person-check"></i> Manage Volunteers
+                                    </a>
+                                </div>
+                            </li>
+                        } *@
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

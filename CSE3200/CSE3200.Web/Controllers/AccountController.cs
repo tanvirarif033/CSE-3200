@@ -1,15 +1,17 @@
-﻿using CSE3200.Infrastructure.Identity;
+﻿using CSE3200.Application.Services;
+using CSE3200.Infrastructure.Identity;
 using CSE3200.Web.Models;
+using CSE3200.Web.Services;
 using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using System.Security.Claims;
-using CSE3200.Web.Services;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Security.Claims;
 using System.Text;
+using System.Text.Encodings.Web;
 
 namespace CSE3200.Web.Controllers
 {
@@ -23,6 +25,7 @@ namespace CSE3200.Web.Controllers
         //private readonly IEmailSender _emailSender;
         private readonly IOtpService _otpService;
         private readonly IEmailSender _emailSender;
+        private readonly IImageService _imageService;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -30,6 +33,7 @@ namespace CSE3200.Web.Controllers
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
             IOtpService otpService,
+                IImageService imageService,
             IEmailSender emailSender)
         {
             _userManager = userManager;
@@ -39,6 +43,7 @@ namespace CSE3200.Web.Controllers
             _logger = logger;
             _otpService = otpService;
             _emailSender = emailSender;
+            _imageService = imageService; 
         }
 
         // ===== Registration =====
@@ -56,52 +61,106 @@ namespace CSE3200.Web.Controllers
         [AllowAnonymous, HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterAsync(RegisterModel model)
         {
-            model.ReturnUrl ??= Url.Content("~/");
-            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            if (ModelState.IsValid)
+            try
             {
+                Console.WriteLine("=== REGISTER METHOD STARTED ===");
+
+                model.ReturnUrl ??= Url.Content("~/");
+                model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+                // Clear ModelState errors for properties that shouldn't be validated in form submission
+                ModelState.Remove("ExternalLogins");
+                ModelState.Remove("ProfilePicture"); // Since you commented it out
+
+                if (!ModelState.IsValid)
+                {
+                    Console.WriteLine("ModelState is invalid");
+
+                    // Debugging code to see validation errors
+                    foreach (var key in ModelState.Keys)
+                    {
+                        var state = ModelState[key];
+                        if (state.Errors.Count > 0)
+                        {
+                            Console.WriteLine($"Field '{key}' has errors:");
+                            foreach (var error in state.Errors)
+                            {
+                                Console.WriteLine($"  - {error.ErrorMessage}");
+                            }
+                        }
+                    }
+
+                    return View(model);
+                }
+
+                Console.WriteLine("ModelState is valid");
+
+                // Rest of your registration logic...
                 var user = CreateUser();
+                Console.WriteLine($"User created with ID: {user.Id}");
 
                 await _userStore.SetUserNameAsync(user, model.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, model.Email, CancellationToken.None);
+                Console.WriteLine("Username and email set");
 
                 user.RegistrationDate = DateTime.UtcNow;
                 user.FirstName = model.FirstName;
                 user.LastName = model.LastName;
+                user.DateOfBirth = model.DateOfBirth;
+                user.PhoneNumber = model.PhoneNumber;
+                Console.WriteLine("User properties assigned");
 
+                // Create user first (without profile picture)
+                Console.WriteLine("Creating user in database...");
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Donor");
+                    Console.WriteLine("User created successfully in database");
 
-                    var userId = await _userManager.GetUserIdAsync(user);
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId, code, returnUrl = model.ReturnUrl },
-                        protocol: Request.Scheme);
-
-                    // await _emailSender.SendEmailAsync(...);
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    // Handle profile picture only if provided (optional now)
+                    if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
                     {
-                        return RedirectToPage("RegisterConfirmation", new { email = model.Email, returnUrl = model.ReturnUrl });
+                        try
+                        {
+                            Console.WriteLine("Saving profile picture...");
+                            var imageUrl = await _imageService.SaveProfileImageAsync(model.ProfilePicture, user.Id.ToString());
+                            user.ProfilePictureUrl = imageUrl;
+
+                            // Update user with profile picture
+                            await _userManager.UpdateAsync(user);
+                            Console.WriteLine("Profile picture saved and user updated");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Profile picture error: {ex.Message}");
+                            _logger.LogError(ex, "Profile picture save failed");
+                            // Continue without profile picture
+                        }
                     }
-                    else
+
+                    // Sign in the user
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    Console.WriteLine("User signed in successfully");
+
+                    return LocalRedirect(model.ReturnUrl);
+                }
+                else
+                {
+                    Console.WriteLine("User creation failed:");
+                    foreach (var error in result.Errors)
                     {
-                        // After successful registration, redirect to login page instead of signing in
-                        TempData["SuccessMessage"] = "Registration successful! Please login with your credentials.";
-                        return RedirectToAction("Login", new { returnUrl = model.ReturnUrl });
+                        Console.WriteLine($"- {error.Description}");
+                        ModelState.AddModelError(string.Empty, error.Description);
                     }
                 }
-
-                foreach (var error in result.Errors)
-                    ModelState.AddModelError(string.Empty, error.Description);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CRITICAL ERROR in RegisterAsync: {ex.Message}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                _logger.LogCritical(ex, "Critical error in registration");
+                ModelState.AddModelError(string.Empty, "A critical error occurred during registration. Please try again.");
             }
 
             return View(model);
