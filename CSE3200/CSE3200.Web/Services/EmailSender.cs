@@ -2,6 +2,7 @@
 using MailKit.Net.Smtp;
 using MimeKit;
 using Microsoft.Extensions.Options;
+using System.Text.RegularExpressions;
 
 namespace CSE3200.Web.Services
 {
@@ -25,10 +26,14 @@ namespace CSE3200.Web.Services
                 message.To.Add(new MailboxAddress("", email));
                 message.Subject = subject;
 
-                message.Body = new TextPart("html")
+                // Build both HTML and plain-text bodies
+                var bodyBuilder = new BodyBuilder
                 {
-                    Text = htmlMessage
+                    HtmlBody = htmlMessage,
+                    TextBody = HtmlToText(htmlMessage) // Fallback text version
                 };
+
+                message.Body = bodyBuilder.ToMessageBody();
 
                 using (var client = new SmtpClient())
                 {
@@ -54,6 +59,13 @@ namespace CSE3200.Web.Services
                 _logger.LogError(ex, $"Failed to send email to {email}");
                 throw new ApplicationException($"Email sending failed: {ex.Message}");
             }
+        }
+
+        // Helper method to convert HTML to plain text (optional)
+        private string HtmlToText(string html)
+        {
+            // Simple HTML to text conversion
+            return Regex.Replace(html ?? string.Empty, "<[^>]*>", "");
         }
     }
 
