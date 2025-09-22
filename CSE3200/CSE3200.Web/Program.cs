@@ -6,6 +6,7 @@ using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
 using CSE3200.Web.Data;
+using CSE3200.Web.Hubs;
 using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
@@ -41,13 +42,22 @@ try
         containerBuilder.RegisterModule(new WebModule(connectionString, migrationAssembly?.FullName));
     });
 
+    // DbContext Registration (IMPORTANT: Keep this before Autofac configuration)
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-         options.UseSqlServer(connectionString, (x) => x.MigrationsAssembly(migrationAssembly)));
+        options.UseSqlServer(connectionString, x => x.MigrationsAssembly(migrationAssembly.FullName)));
+
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
     // Razor Pages + MVC
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
+
+    // Add SignalR with proper configuration
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = true;
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+    });
 
     // Serilog
     builder.Host.UseSerilog((context, lc) => lc
@@ -82,11 +92,18 @@ try
     // Add email configuration
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
+
+    // Register services
+    builder.Services.AddScoped<IOtpService, OtpService>();
+    builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+
     // Add HttpClient factory
     builder.Services.AddHttpClient();
 
     // Register Maps Service as a typed client
     builder.Services.AddHttpClient<IMapsService, GoogleMapsService>();
+
 
     // REMOVE THESE LINES - They are already registered in WebModule
     // builder.Services.AddScoped<IOtpService, OtpService>();
@@ -94,12 +111,17 @@ try
     // Add ImageService
     builder.Services.AddScoped<IImageService, ImageService>();
 
+    // Register ChatHub with DI (IMPORTANT: This ensures DbContext is available in ChatHub)
+    builder.Services.AddScoped<ChatHub>();
+
+
     var app = builder.Build();
 
     // Pipeline
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
+        app.UseDeveloperExceptionPage();
     }
     else
     {
@@ -108,7 +130,11 @@ try
     }
 
     app.UseHttpsRedirection();
-    app.UseStaticFiles(); // Add this for serving static files (images, CSS, JS)
+
+
+
+    app.UseStaticFiles();
+
     app.UseRouting();
 
     // Order matters
@@ -117,6 +143,7 @@ try
 
     app.MapStaticAssets();
 
+    // Map Controllers
     app.MapControllerRoute(
         name: "areas",
         pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
@@ -141,9 +168,30 @@ try
 
     app.MapRazorPages().WithStaticAssets();
 
-    app.Run();
+    // Add SignalR hub mapping (IMPORTANT: This should be after authorization)
+    app.MapHub<ChatHub>("/chatHub");
+
+    // Log all mapped endpoints for debugging
+    app.Use(async (context, next) =>
+    {
+        if (context.Request.Path.StartsWithSegments("/debug-endpoints"))
+        {
+            await context.Response.WriteAsync("Endpoints mapped successfully");
+            return;
+        }
+        await next();
+    });
+
+    // Ensure database is created and migrations are applied
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await dbContext.Database.EnsureCreatedAsync();
+        Log.Information("Database ensured created.");
+    }
 
     Log.Information("Application started successfully.");
+    app.Run();
 }
 catch (Exception ex)
 {
