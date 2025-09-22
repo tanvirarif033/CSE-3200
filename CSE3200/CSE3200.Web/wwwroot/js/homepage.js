@@ -151,9 +151,7 @@ function initializeDonation() {
             },
             success: function (response) {
                 if (response.success) {
-                    // Combined success UI from both snippets:
-                    // - detailed message with transaction id & redirect note
-                    // - keep previous reset behavior
+                    // Combined success UI
                     $('#donationResult').removeClass('d-none alert-danger')
                         .addClass('alert-success')
                         .html(`
@@ -164,15 +162,12 @@ function initializeDonation() {
                             <br><small>Redirecting to donation history...</small>
                         `);
 
-                    // After 3 seconds: close/reset (previous behavior) AND redirect (added)
                     setTimeout(() => {
-                        // previous reset/cleanup
                         $('#donationModal').modal('hide');
                         $('#donationForm')[0].reset();
                         $('#donationForm').removeClass('was-validated');
                         submitBtn.prop('disabled', false).html('<i class="bi bi-credit-card me-1"></i> Proceed to Payment');
 
-                        // redirect (from first snippet)
                         if (response.redirectUrl) {
                             window.location.href = response.redirectUrl;
                         } else {
@@ -265,7 +260,6 @@ function initializeDetailsButtons() {
                                 <tr>
                                     <td>
                                         <div>${volunteer.volunteerName || 'Unknown Volunteer'}</div>
-
                                     </td>
                                     <td>${volunteer.volunteerEmail || 'N/A'}</td>
                                     <td>${volunteer.taskDescription}</td>
@@ -318,7 +312,7 @@ function initializeDetailsButtons() {
                     `);
                 }
             },
-            error: function (xhr, status, error) {
+            error: function () {
                 $('#disasterDetails').html(`
                     <div class="alert alert-danger">
                         <i class="bi bi-exclamation-triangle"></i> Error loading disaster details. Please try again.
@@ -375,7 +369,7 @@ function initializeMapButtons() {
                     `);
                 }
             },
-            error: function (xhr, status, error) {
+            error: function () {
                 $('#mapContainer').html(`
                     <div class="alert alert-danger text-center py-4">
                         <i class="bi bi-exclamation-triangle"></i> Error loading map. Please try again.
@@ -440,6 +434,72 @@ function initializeMapButtons() {
     });
 }
 
+/* ===== NEW: SHARE (copy link + text, device web share, LinkedIn clipboard) ===== */
+function initializeShare() {
+    // Copy link & text
+    $(document).on('click', '.share-copy-link', function () {
+        const url = $(this).data('share-url');
+        const text = $(this).data('share-text') || url;
+        const toCopy = `${text}`;
+        if (navigator.clipboard && toCopy) {
+            navigator.clipboard.writeText(toCopy)
+                .then(() => alert('Text copied!'))
+                .catch(() => fallbackCopy(toCopy));
+        } else {
+            fallbackCopy(toCopy);
+        }
+    });
+
+    // Device Web Share (mobile-friendly; Instagram appears via device share sheet)
+    $(document).on('click', '.share-web', function () {
+        const title = $(this).data('share-title') || document.title;
+        const url = $(this).data('share-url') || location.href;
+        const text = $(this).data('share-text') || '';
+        if (navigator.share) {
+            navigator.share({ title, text, url }).catch(() => { /* user cancelled */ });
+        } else {
+            alert('Device share is not supported in this browser.');
+        }
+    });
+
+    // LinkedIn: copy text to clipboard first, then open share URL
+    $(document).on('click', '.share-linkedin', function () {
+        const url = $(this).data('share-url');
+        const text = $(this).data('share-text') || '';
+        const openShare = () => window.open(url, '_blank', 'noopener,noreferrer');
+        if (navigator.clipboard && text) {
+            navigator.clipboard.writeText(text).then(openShare).catch(openShare);
+        } else {
+            fallbackCopy(text);
+            openShare();
+        }
+    });
+
+    function fallbackCopy(value) {
+        const $tmp = $('<textarea readonly style="position:absolute;left:-9999px;top:-9999px;"></textarea>').appendTo('body').val(value).select();
+        document.execCommand('copy');
+        $tmp.remove();
+        alert('Text copied!');
+    }
+}
+
+/* ===== NEW: Deep link — open modal if ?disasterId=... present ===== */
+function initializeDeepLinkDisaster() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('disasterId');
+    if (!id) return;
+
+    // Reuse existing details button handler if the button is present
+    const $btn = $(`.details-btn[data-disaster-id='${id}']`);
+    if ($btn.length) {
+        $btn.trigger('click');
+        return;
+    }
+
+    // Optional fallback (kept minimal to avoid altering existing flows):
+    // You can fetch and render details here if needed, but primary path is to trigger the existing button.
+}
+
 // Initialize all functionality when document is ready
 $(document).ready(function () {
     initializeAlertTicker();
@@ -448,4 +508,8 @@ $(document).ready(function () {
     initializeDonation();
     initializeDetailsButtons();
     initializeMapButtons();
+
+    // NEW:
+    initializeShare();
+    initializeDeepLinkDisaster();
 });
