@@ -18,6 +18,7 @@ namespace CSE3200.Application.Features.Users.Commands
             _roleManager = roleManager;
         }
 
+        // UpdateUserCommandHandler.cs
         public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByIdAsync(request.Id.ToString());
@@ -28,6 +29,16 @@ namespace CSE3200.Application.Features.Users.Commands
             user.Email = request.Email;
             user.UserName = request.Email;
             user.DateOfBirth = request.DateOfBirth;
+            user.PhoneNumber = request.PhoneNumber;
+
+            // Add these new properties
+            user.Address = request.Address;
+            user.City = request.City;
+            user.State = request.State;
+            user.ZipCode = request.ZipCode;
+            user.EmergencyContactName = request.EmergencyContactName;
+            user.EmergencyContactPhone = request.EmergencyContactPhone;
+            user.Skills = request.Skills;
 
             // Update user
             await _userManager.UpdateAsync(user);

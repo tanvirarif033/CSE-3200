@@ -1,0 +1,93 @@
+﻿@model List<CSE3200.Web.Areas.Admin.Models.VolunteerRequestViewModel>
+
+@{
+    ViewData["Title"] = "Pending Volunteer Requests";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Pending Volunteer Requests</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Volunteer Applications</h6>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Skills</th>
+                                <th>Emergency Contact</th>
+                                <th>Request Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var request in Model)
+                            {
+                                <tr>
+                                    <td>@request.FirstName @request.LastName</td>
+                                    <td>@request.Email</td>
+                                    <td>@request.PhoneNumber</td>
+                                    <td>@request.Skills</td>
+                                    <td>@request.EmergencyContactName<br />@request.EmergencyContactPhone</td>
+                                    <td>@request.RequestDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <form asp-action="ApproveRequest" method="post" class="d-inline">
+                                            <input type="hidden" name="userId" value="@request.UserId" />
+                                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                        </form>
+                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#rejectModal-@request.UserId">
+                                            Reject
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal-@request.UserId" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reject Volunteer Request</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form asp-action="RejectRequest" method="post">
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="userId" value="@request.UserId" />
+                                                    <div class="form-group">
+                                                        <label for="reason-@request.UserId" class="form-label">Reason for rejection:</label>
+                                                        <input type="text" name="reason" class="form-control" required
+                                                               placeholder="Brief reason for rejection..." />
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">Reject</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No pending volunteer requests.
+                </div>
+            }
+        </div>
+    </div>
+</div>

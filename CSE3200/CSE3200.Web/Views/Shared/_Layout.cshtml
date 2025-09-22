@@ -60,6 +60,34 @@
                                 </a>
                             </li>
                         }
+                        <!-- For regular users -->
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person"></i> My Profile
+                                </a>
+                            </li>
+                        }
+
+                        <!-- For Admin users -->
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-gear"></i> Admin
+                                </a>
+                                <div class="dropdown-menu">
+                                    <!-- Corrected controller name from "AdminVolunteer" to "Volunteer" -->
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Volunteer" asp-action="PendingRequests">
+                                        <i class="bi bi-people"></i> Volunteer Requests
+                                    </a>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Volunteer" asp-action="ManageVolunteers">
+                                        <i class="bi bi-person-check"></i> Manage Volunteers
+                                    </a>
+                                </div>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
