@@ -8,9 +8,8 @@ using CSE3200.Application.Features.Chat.Queries;
 namespace CSE3200.Web.Controllers
 {
     [Authorize]
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ChatController : ControllerBase
+    [Route("[controller]")] // CHANGED: Removed "api/" from the route
+    public class ChatController : Controller // Changed from ControllerBase
     {
         private readonly IMediator _mediator;
 
@@ -29,7 +28,18 @@ namespace CSE3200.Web.Controllers
             return Guid.Parse(userIdClaim);
         }
 
-        [HttpPost("send")]
+        // Handles /Chat requests - serves HTML page
+        [HttpGet]
+        [Route("", Name = "ChatPage")]
+        public IActionResult ChatPage()
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            ViewBag.CurrentUserId = currentUserId;
+            return View("~/Views/Chat/Index.cshtml");
+        }
+
+        // API endpoints - note the [Route("api/...")] prefix
+        [HttpPost("api/send")]
         public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
         {
             var userId = GetUserId();
@@ -46,13 +56,12 @@ namespace CSE3200.Web.Controllers
             return Ok(new { MessageId = messageId });
         }
 
-        [HttpGet("messages")]
+        [HttpGet("api/messages")]
         public async Task<IActionResult> GetMessages([FromQuery] Guid? userId)
         {
             var currentUserId = GetUserId();
             var isAdmin = User.IsInRole("Admin");
 
-            // If admin wants to see messages with a specific user
             Guid? targetUserId = isAdmin ? userId : null;
 
             var messages = await _mediator.Send(new GetUserMessagesQuery
@@ -64,12 +73,10 @@ namespace CSE3200.Web.Controllers
             return Ok(messages);
         }
 
-        [HttpGet("admin/conversations")]
+        [HttpGet("api/admin/conversations")]
         [Authorize(Roles = "Admin")]
-        public IActionResult GetAdminConversations()  // Remove 'async' and change return type
+        public IActionResult GetAdminConversations()
         {
-            // This will return all unique users who have chatted with admin
-            // For now, return empty array - we'll implement this later
             return Ok(new { users = Array.Empty<object>() });
         }
     }

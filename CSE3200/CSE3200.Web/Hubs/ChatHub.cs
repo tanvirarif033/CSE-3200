@@ -32,46 +32,52 @@ namespace CSE3200.Web.Hubs
             await base.OnConnectedAsync();
         }
 
-        public async Task SendMessageToUser(Guid receiverId, string content)
+        public async Task SendMessageToUser(string receiverId, string content)
         {
-            var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) return;
-
-            var senderId = Guid.Parse(userIdClaim.Value);
-            var isAdmin = Context.User.IsInRole("Admin");
-
-            // Save to database
-            var messageId = await _mediator.Send(new CreateChatMessageCommand
+            try
             {
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = content,
-                IsFromAdmin = isAdmin
-            });
+                var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null) return;
 
-            // Send to receiver
-            await Clients.Group(receiverId.ToString()).SendAsync("ReceiveMessage", new
-            {
-                Id = messageId,
-                SenderId = senderId,
-                ReceiverId = receiverId,
-                Content = content,
-                SentAt = DateTime.UtcNow,
-                IsFromAdmin = isAdmin
-            });
+                var senderId = Guid.Parse(userIdClaim.Value);
+                var isAdmin = Context.User.IsInRole("Admin");
+                var receiverGuid = Guid.Parse(receiverId);
 
-            // If admin sends message, also update admin UI
-            if (isAdmin)
-            {
-                await Clients.Group("Admins").SendAsync("AdminMessageSent", new
+                // Get the sender's display name
+                var senderName = Context.User?.FindFirst(ClaimTypes.Name)?.Value ??
+                                Context.User?.FindFirst(ClaimTypes.Email)?.Value ??
+                                (isAdmin ? "Admin" : "User");
+
+                var messageId = await _mediator.Send(new CreateChatMessageCommand
                 {
-                    Id = messageId,
                     SenderId = senderId,
+                    ReceiverId = receiverGuid,
+                    Content = content,
+                    IsFromAdmin = isAdmin
+                });
+
+                // Send to receiver - INCLUDING SENDER NAME
+                await Clients.Group(receiverId).SendAsync("ReceiveMessage", new
+                {
+                    Id = messageId.ToString(),
+                    SenderId = senderId.ToString(),
+                    SenderName = senderName, // ← ADD THIS
                     ReceiverId = receiverId,
                     Content = content,
-                    SentAt = DateTime.UtcNow
+                    SentAt = DateTime.UtcNow,
+                    IsFromAdmin = isAdmin
                 });
+
+                Console.WriteLine("✅ Message sent to receiver successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SERVER ERROR: {ex.Message}");
+                throw new HubException($"Server error: {ex.Message}");
             }
         }
+
+
+
     }
 }

@@ -74,7 +74,7 @@ try
 
     // ? Google Authentication — ?? ?????? ?????? Build() ?? ???
     builder.Services
-        .AddAuthentication()  
+        .AddAuthentication()
         .AddGoogle(options =>
         {
             options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
@@ -153,5 +153,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
-

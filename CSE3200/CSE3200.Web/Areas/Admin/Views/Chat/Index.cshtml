@@ -1,10 +1,14 @@
-﻿@{
+﻿@using System.Security.Claims
+@{
     ViewData["Title"] = "Admin Chat Dashboard";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+
+    // Get user ID manually
+    var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 }
 
-<!-- Hidden field to store current user ID -->
-<input type="hidden" id="current-user-id" value="@ViewBag.CurrentUserId" />
+<!-- Hidden field for user ID -->
+<input type="hidden" id="current-user-id" value="@currentUserId" />
 
 <div class="container-fluid">
     <div class="row">
@@ -54,7 +58,35 @@
 
             // Handle incoming messages
             connection.on("ReceiveMessage", (message) => {
-                addMessageToChat(message, false);
+                console.log('📩 Received real-time message:', message);
+
+                // Convert IDs to strings for comparison
+                const messageSenderId = message.senderId ? message.senderId.toString() : '';
+                const messageReceiverId = message.receiverId ? message.receiverId.toString() : null;
+                const currentUserIdStr = currentUserId ? currentUserId.toString() : '';
+                const currentConversationStr = window.currentConversationUserId ? window.currentConversationUserId.toString() : null;
+
+                console.log('Comparing:', {
+                    messageSenderId,
+                    messageReceiverId,
+                    currentUserIdStr,
+                    currentConversationStr
+                });
+
+                // Check if this message belongs to the current conversation
+                const isForCurrentConversation =
+                    (messageSenderId === currentConversationStr && messageReceiverId === currentUserIdStr) ||
+                    (messageSenderId === currentUserIdStr && messageReceiverId === currentConversationStr);
+
+                if (isForCurrentConversation) {
+                    console.log('✅ Adding message to current conversation');
+                    addMessageToChat(message, false);
+                } else {
+                    console.log('ℹ️ Message received for different conversation');
+                }
+
+                // Refresh conversations list to show new message indicator
+                loadConversations();
             });
 
             connection.on("AdminMessageSent", (message) => {
@@ -75,7 +107,7 @@
         // Load conversations list
         async function loadConversations() {
             try {
-                const response = await fetch('/api/chat/messages');
+                const response = await fetch('/chat/api/messages');
                 if (!response.ok) {
                     throw new Error('Failed to load conversations');
                 }
@@ -87,10 +119,11 @@
         }
 
         // Update conversation list UI
-        function updateConversationList(messages) {
+                function updateConversationList(messages) {
             const conversationList = document.getElementById('conversation-list');
+            if (!conversationList) return;
 
-            if (messages.length === 0) {
+            if (!messages || messages.length === 0) {
                 conversationList.innerHTML = '<p class="text-muted">No conversations yet</p>';
                 return;
             }
@@ -115,10 +148,14 @@
 
                 const div = document.createElement('div');
                 div.className = 'conversation-item p-2 border-bottom';
+
+                // USE SENDERNAME INSTEAD OF USER ID
+                const displayName = lastMessage.senderName || `User: ${userId.substring(0, 8)}...`;
+
                 div.innerHTML = `
-                    <div class="fw-bold">User: ${userId.substring(0, 8)}...</div>
-                    <div class="text-muted small">${lastMessage.content.substring(0, 30)}...</div>
-                    <div class="text-muted smaller">${new Date(lastMessage.sentAt).toLocaleTimeString()}</div>
+                    <div class="fw-bold">${displayName}</div>
+                    <div class="text-muted small">${lastMessage.content ? lastMessage.content.substring(0, 30) : ''}...</div>
+                    <div class="text-muted smaller">${lastMessage.sentAt ? new Date(lastMessage.sentAt).toLocaleTimeString() : ''}</div>
                 `;
                 div.onclick = () => loadConversation(userId);
                 conversationList.appendChild(div);
@@ -126,27 +163,41 @@
         }
 
         // Load specific conversation
-        async function loadConversation(userId) {
+                async function loadConversation(userId) {
             try {
-                const response = await fetch(`/api/chat/messages?userId=${userId}`);
+                const response = await fetch(`/chat/api/messages?userId=${userId}`);
                 if (!response.ok) {
                     throw new Error('Failed to load conversation');
                 }
                 const messages = await response.json();
 
-                document.getElementById('current-conversation').textContent = `Conversation with User: ${userId.substring(0, 8)}...`;
-                document.getElementById('message-input').disabled = false;
-                document.getElementById('send-button').disabled = false;
+                const currentConversationEl = document.getElementById('current-conversation');
+                const messageInput = document.getElementById('message-input');
+                const sendButton = document.getElementById('send-button');
+
+                // USE SENDERNAME FROM THE FIRST MESSAGE
+                const displayName = messages.length > 0 ?
+                    (messages[0].senderName || `User: ${userId.substring(0, 8)}...`) :
+                    `User: ${userId.substring(0, 8)}...`;
+
+                if (currentConversationEl) {
+                    currentConversationEl.textContent = `Conversation with ${displayName}`;
+                }
+
+                if (messageInput) messageInput.disabled = false;
+                if (sendButton) sendButton.disabled = false;
 
                 const chatMessages = document.getElementById('chat-messages');
-                chatMessages.innerHTML = '';
+                if (chatMessages) {
+                    chatMessages.innerHTML = '';
 
-                messages.forEach(msg => {
-                    addMessageToChat(msg, true);
-                });
+                    messages.forEach(msg => {
+                        addMessageToChat(msg, true);
+                    });
 
-                // Scroll to bottom
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
 
                 // Store current conversation user ID
                 window.currentConversationUserId = userId;
@@ -158,12 +209,19 @@
         // Add message to chat UI
         function addMessageToChat(message, isHistorical) {
             const chatMessages = document.getElementById('chat-messages');
+            if (!chatMessages) return;
+
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${message.senderId === currentUserId ? 'message-sent' : 'message-received'}`;
+
+            // Convert IDs to strings for proper comparison
+            const messageSenderId = message.senderId ? message.senderId.toString() : '';
+            const currentUserIdStr = currentUserId ? currentUserId.toString() : '';
+
+            messageDiv.className = `message ${messageSenderId === currentUserIdStr ? 'message-sent' : 'message-received'}`;
             messageDiv.innerHTML = `
                 <div class="message-content ${message.isFromAdmin ? 'admin-message' : ''}">
-                    <div class="message-text">${message.content}</div>
-                    <div class="message-time">${new Date(message.sentAt).toLocaleTimeString()}</div>
+                    <div class="message-text">${message.content || ''}</div>
+                    <div class="message-time">${message.sentAt ? new Date(message.sentAt).toLocaleTimeString() : new Date().toLocaleTimeString()}</div>
                 </div>
             `;
 
@@ -172,42 +230,78 @@
             if (!isHistorical) {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
+
+            console.log('✅ Message added to UI:', message.content);
         }
 
         // Send message
         async function sendMessage() {
             const input = document.getElementById('message-input');
-            const content = input.value.trim();
+            if (!input) return;
 
+            const content = input.value.trim();
             if (!content || !window.currentConversationUserId) return;
 
             try {
-                await connection.invoke("SendMessageToUser", window.currentConversationUserId, content);
+                // Send message via SignalR
+                await connection.invoke("SendMessageToUser", window.currentConversationUserId.toString(), content);
+
+                // Create and add the sent message to UI immediately
+                const chatMessages = document.getElementById('chat-messages');
+                if (chatMessages) {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-sent';
+                    messageDiv.innerHTML = `
+                        <div class="message-content admin-message">
+                            <div class="message-text">${content}</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+
+                    // Add to chat window and scroll to bottom
+                    chatMessages.appendChild(messageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+
+                // Clear input
                 input.value = '';
+
             } catch (error) {
                 console.error("Error sending message:", error);
-                alert('Failed to send message: ' + error.message);
+                alert('Failed to send message. Please try again.');
             }
         }
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Get current user ID from hidden field
-            currentUserId = document.getElementById('current-user-id').value;
-            console.log('Current user ID:', currentUserId);
+            // Get current user ID from hidden field with null check
+            const userIdElement = document.getElementById('current-user-id');
+            if (userIdElement && userIdElement.value) {
+                currentUserId = userIdElement.value;
+                console.log('Current user ID:', currentUserId);
+            } else {
+                console.error('Current user ID not found, using fallback');
+                currentUserId = '29671297-6bd9-476a-f172-08ddddda291f'; // Fallback
+            }
 
             initSignalR();
 
             // Set up send button
-            document.getElementById('send-button').onclick = sendMessage;
+            const sendButton = document.getElementById('send-button');
+            if (sendButton) {
+                sendButton.onclick = sendMessage;
+            }
 
             // Send on Enter key
-            document.getElementById('message-input').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+            const messageInput = document.getElementById('message-input');
+            if (messageInput) {
+                messageInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
         });
     </script>
 
