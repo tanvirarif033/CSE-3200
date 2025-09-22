@@ -125,7 +125,7 @@ function initializeDonation() {
         $('#donationModal').modal('show');
     });
 
-    // Handle donation form submission
+    // Handle donation form submission (merged behavior)
     $('#donationForm').on('submit', function (e) {
         e.preventDefault();
 
@@ -151,21 +151,33 @@ function initializeDonation() {
             },
             success: function (response) {
                 if (response.success) {
+                    // Combined success UI from both snippets:
+                    // - detailed message with transaction id & redirect note
+                    // - keep previous reset behavior
                     $('#donationResult').removeClass('d-none alert-danger')
                         .addClass('alert-success')
                         .html(`
                             <i class="bi bi-check-circle-fill"></i>
                             <strong>Success!</strong> ${response.message}
-                            <br><small>Transaction ID: ${response.transactionId}</small>
+                            ${response.transactionId ? `<br><small>Transaction ID: ${response.transactionId}</small>` : ''}
                             <br><small>Thank you for your generosity!</small>
+                            <br><small>Redirecting to donation history...</small>
                         `);
 
-                    // Reset form and close modal after 3 seconds
+                    // After 3 seconds: close/reset (previous behavior) AND redirect (added)
                     setTimeout(() => {
+                        // previous reset/cleanup
                         $('#donationModal').modal('hide');
                         $('#donationForm')[0].reset();
                         $('#donationForm').removeClass('was-validated');
                         submitBtn.prop('disabled', false).html('<i class="bi bi-credit-card me-1"></i> Proceed to Payment');
+
+                        // redirect (from first snippet)
+                        if (response.redirectUrl) {
+                            window.location.href = response.redirectUrl;
+                        } else {
+                            window.location.href = '/Home/DonationHistory';
+                        }
                     }, 3000);
                 } else {
                     $('#donationResult').removeClass('d-none alert-success')
@@ -192,7 +204,7 @@ function initializeDonation() {
         });
     });
 
-    // Clear validation when modal is closed
+    // Clear validation when modal is closed to avoid conflicts
     $('#donationModal').on('hidden.bs.modal', function () {
         $('#donationForm').removeClass('was-validated');
         $('#donationResult').addClass('d-none').removeClass('alert-success alert-danger');
