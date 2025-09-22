@@ -14,6 +14,10 @@ using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
+// --- Added for SignalR/ChatHub (merge) ---
+using CSE3200.Web.Hubs;
+// -----------------------------------------
+
 // Bootstrap Logger
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -48,6 +52,16 @@ try
     // Razor Pages + MVC
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews();
+
+    // --- Added: SignalR (merge) ---
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = true;
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1 MB
+    });
+    // Register ChatHub with DI so it can get scoped services like DbContext
+    builder.Services.AddScoped<ChatHub>();
+    // ------------------------------
 
     // Serilog
     builder.Host.UseSerilog((context, lc) => lc
@@ -91,6 +105,7 @@ try
     // REMOVE THESE LINES - They are already registered in WebModule
     // builder.Services.AddScoped<IOtpService, OtpService>();
     // builder.Services.AddTransient<IEmailSender, EmailSender>();
+
     // Add ImageService
     builder.Services.AddScoped<IImageService, ImageService>();
 
@@ -100,6 +115,9 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseMigrationsEndPoint();
+
+        // --- Optional: keep dev experience from second file without changing existing flow ---
+        app.UseDeveloperExceptionPage();
     }
     else
     {
@@ -140,6 +158,10 @@ try
         defaults: new { controller = "Profile" });
 
     app.MapRazorPages().WithStaticAssets();
+
+    // --- Added: SignalR hub mapping (merge) ---
+    app.MapHub<ChatHub>("/chatHub");
+    // ------------------------------------------
 
     app.Run();
 
