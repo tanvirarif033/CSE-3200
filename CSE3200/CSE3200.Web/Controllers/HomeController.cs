@@ -1,3 +1,4 @@
+using CSE3200.Application.Services;
 using CSE3200.Domain;
 using CSE3200.Domain.Entities;
 using CSE3200.Domain.Services;
@@ -7,6 +8,7 @@ using CSE3200.Web.Models;
 using CSE3200.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -14,6 +16,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CSE3200.Web.Services;
+using IEmailSender = CSE3200.Web.Services.IEmailSender;
 
 namespace CSE3200.Web.Controllers
 {
@@ -26,7 +30,8 @@ namespace CSE3200.Web.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IMapsService _mapsService;
         private readonly IDisasterAlertService _alertService;
-
+        private readonly IEmailSender _emailSender;
+        
         public HomeController(
             IDisasterService disasterService,
             IDonationService donationService,
@@ -34,7 +39,8 @@ namespace CSE3200.Web.Controllers
             UserManager<ApplicationUser> userManager,
             ILogger<HomeController> logger,
             IMapsService mapsService,
-            IDisasterAlertService alertService)
+            IDisasterAlertService alertService,
+             IEmailSender emailSender)
         {
             _disasterService = disasterService;
             _donationService = donationService;
@@ -43,6 +49,7 @@ namespace CSE3200.Web.Controllers
             _logger = logger;
             _mapsService = mapsService;
             _alertService = alertService;
+            _emailSender = emailSender;
         }
 
         public IActionResult Index()
@@ -94,11 +101,10 @@ namespace CSE3200.Web.Controllers
                 return View(new List<Disaster>());
             }
         }
-
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult Donate(DonationModel model)
+        public async Task<IActionResult> Donate(DonationModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -143,6 +149,13 @@ namespace CSE3200.Web.Controllers
                 // Simulate successful payment
                 _donationService.UpdatePaymentStatus(donation.Id, transactionId, "Completed");
 
+                // Get disaster details for email
+                var disaster = _disasterService.GetDisaster(model.DisasterId);
+                var disasterTitle = disaster?.Title ?? "Unknown Disaster";
+
+                // Send confirmation email
+                await SendDonationConfirmationEmail(donorEmail, donorName, donation.Amount, disasterTitle, transactionId);
+
                 _logger.LogInformation("Donation successful: {DonationId}, Amount: {Amount}, Method: {Method}",
                     donation.Id, donation.Amount, donation.PaymentMethod);
 
@@ -151,13 +164,81 @@ namespace CSE3200.Web.Controllers
                     success = true,
                     message = "Donation successful! Thank you for your support.",
                     donationId = donation.Id,
-                    transactionId = transactionId
+                    transactionId = transactionId,
+                    redirectUrl = Url.Action("DonationHistory", "Home")
                 });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing donation for disaster {DisasterId}", model.DisasterId);
                 return Json(new { success = false, message = "Error processing donation. Please try again." });
+            }
+        }
+
+        private async Task SendDonationConfirmationEmail(string email, string donorName, decimal amount, string disasterTitle, string transactionId)
+        {
+            try
+            {
+                var subject = "Donation Confirmation - Disaster Management System";
+                var htmlMessage = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; }}
+        .header {{ background: linear-gradient(45deg, #3f51b5, #303f9f); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .content {{ padding: 20px; background: #f9f9f9; border-radius: 0 0 10px 10px; }}
+        .amount {{ font-size: 24px; font-weight: bold; color: #28a745; text-align: center; margin: 20px 0; }}
+        .details {{ background: white; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+        .footer {{ text-align: center; margin-top: 20px; font-size: 12px; color: #666; }}
+    </style>
+</head>
+<body>
+    <div class='header'>
+        <h1>Disaster Management System</h1>
+        <p>Donation Confirmation</p>
+    </div>
+    
+    <div class='content'>
+        <h2>Thank You for Your Generous Donation!</h2>
+        
+        <p>Dear {donorName},</p>
+        
+        <p>Your donation has been successfully processed. Here are the details of your contribution:</p>
+        
+        <div class='details'>
+            <p><strong>Amount Donated:</strong> <span class='amount'>{amount:C}</span></p>
+            <p><strong>Disaster:</strong> {disasterTitle}</p>
+            <p><strong>Transaction ID:</strong> {transactionId}</p>
+            <p><strong>Date:</strong> {DateTime.UtcNow.ToString("MMMM dd, yyyy 'at' hh:mm tt UTC")}</p>
+        </div>
+        
+        <p>Your contribution will help provide immediate relief and support to those affected by the disaster. 
+        Every donation makes a difference in saving lives and rebuilding communities.</p>
+        
+        <p>You can view your donation history and track all your contributions by visiting your account dashboard.</p>
+        
+        <p>If you have any questions about your donation, please contact our support team.</p>
+        
+        <p>With gratitude,<br>
+        <strong>The Disaster Management Team</strong></p>
+    </div>
+    
+    <div class='footer'>
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>&copy; {DateTime.UtcNow.Year} Disaster Management System. All rights reserved.</p>
+    </div>
+</body>
+</html>";
+
+                await _emailSender.SendEmailAsync(email, subject, htmlMessage);
+                _logger.LogInformation("Donation confirmation email sent to {Email}", email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send donation confirmation email to {Email}", email);
+                // Don't throw the exception - we don't want email failures to affect the donation process
             }
         }
 

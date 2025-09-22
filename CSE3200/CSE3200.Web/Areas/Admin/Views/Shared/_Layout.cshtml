@@ -242,9 +242,18 @@
         <!--begin::Sidebar-->
         <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
             <div class="sidebar-brand">
-                <a href="~/Home/Index" class="brand-link">
-                    <img src="~/admin-lte-4/assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image opacity-75" />
-                    <span class="brand-text fw-light">CSE3200</span>
+
+                <!--begin::Brand Link-->
+                <a href="./index.html" class="brand-link">
+                    <!--begin::Brand Image-->
+                    <img src="~/admin-lte-4/assets/img/AdminLTELogo.png"
+                         alt="AdminLTE Logo"
+                         class="brand-image opacity-75 shadow" />
+                    <!--end::Brand Image-->
+                    <!--begin::Brand Text-->
+                    <span class="brand-text fw-light">RescueNet</span>
+                    <!--end::Brand Text-->
+
                 </a>
             </div>
             <div class="sidebar">
@@ -262,19 +271,57 @@
                                 <p>Chat Support</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="~/Admin/Product/Index" class="nav-link">
-                                <i class="nav-icon bi bi-box-seam"></i>
-                                <p>Products</p>
+
+                        @* Admin-only: Volunteer Requests & Manage Volunteers (separate items, no dropdown) *@
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item" id="volunteer-requests-item">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Volunteer" asp-action="PendingRequests">
+                                    <i class="nav-icon bi bi-people"></i>
+                                    <p>Volunteer Requests</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item" id="manage-volunteers-item">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Volunteer" asp-action="ManageVolunteers">
+                                    <i class="nav-icon bi bi-person-check"></i>
+                                    <p>Manage Volunteers</p>
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Disasters Section -->
+                        <li class="nav-item" id="disasters-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="Disasters" asp-action="Index">
+                                <i class="nav-icon bi bi-cloud-haze2"></i>
+                                <p>Disasters</p>
                             </a>
                         </li>
+
+                        <li class="nav-item" id="approvals-item">
+                            <a class="nav-link" asp-area="Admin" asp-controller="Disasters" asp-action="Approvals">
+                                <i class="nav-icon bi bi-clipboard-check"></i>
+                                <p>Approvals</p>
+                            </a>
+                        </li>
+
+
+
+                        <!-- Logout Section -->
                         <li class="nav-item">
-                            <a href="~/Admin/FAQ/Index" class="nav-link">
-                                <i class="nav-icon bi bi-question-circle"></i>
-                                <p>FAQ</p>
+                            <a href="/Account/Logout" class="nav-link logout-btn">
+                                <i class="nav-icon bi bi-box-arrow-right"></i>
+                                <p>Logout</p>
                             </a>
                         </li>
                     </ul>
+
+
+
+
+
+                        <!--end::Sidebar Menu-->
+
                 </nav>
             </div>
         </aside>

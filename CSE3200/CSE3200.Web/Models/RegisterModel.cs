@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace CSE3200.Web.Models
@@ -29,8 +30,26 @@ namespace CSE3200.Web.Models
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
 
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        public DateTime DateOfBirth { get; set; }
+
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string PhoneNumber { get; set; }
+
+        // Make ProfilePicture optional since you commented it out in the view
+        [Display(Name = "Profile Picture")]
+        public IFormFile? ProfilePicture { get; set; } // Make nullable
+
+        // Hidden field for role - defaults to "Donor" for public registration
+        [HiddenInput]
+        public string Role { get; set; } = "Donor";
+
         public string? ReturnUrl { get; set; }
 
+        // Make ExternalLogins not required for form submission
         public IList<AuthenticationScheme>? ExternalLogins { get; set; }
     }
 }

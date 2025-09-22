@@ -1,0 +1,70 @@
+﻿@model List<CSE3200.Web.Areas.Admin.Models.VolunteerManagementViewModel>
+
+@{
+    ViewData["Title"] = "Manage Volunteers";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Manage Volunteers</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Active Volunteers</h6>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Skills</th>
+                                <th>Status</th>
+                                <th>Registration Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var volunteer in Model)
+                            {
+                                <tr>
+                                    <td>@volunteer.FirstName @volunteer.LastName</td>
+                                    <td>@volunteer.Email</td>
+                                    <td>@volunteer.PhoneNumber</td>
+                                    <td>@volunteer.Skills</td>
+                                    <td>
+                                        <span class="badge bg-@(volunteer.IsActive ? "success" : "warning")">
+                                            @(volunteer.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>@volunteer.RegistrationDate.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <form asp-action="RemoveVolunteer" method="post" class="d-inline">
+                                            <input type="hidden" name="userId" value="@volunteer.UserId" />
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Are you sure you want to remove this volunteer?')">
+                                                Remove
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    No volunteers found.
+                </div>
+            }
+        </div>
+    </div>
+</div>

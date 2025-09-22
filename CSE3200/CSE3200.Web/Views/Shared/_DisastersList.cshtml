@@ -1,5 +1,4 @@
-﻿<!-- Views/Shared/_DisastersList.cshtml -->
-@model IList<Disaster>
+﻿@model IList<CSE3200.Domain.Entities.Disaster>
 @using CSE3200.Domain.Entities
 @using Humanizer
 
@@ -17,6 +16,10 @@
             <div class="row g-4" id="disastersContainer">
                 @foreach (var disaster in Model.OrderByDescending(d => d.Severity).ThenByDescending(d => d.OccurredDate))
                 {
+                    // === Share URL + text (server-side prepared) ===
+                    var shareUrl = $"{Context.Request.Scheme}://{Context.Request.Host}{Url.Action("Index", "Home")}?disasterId={disaster.Id}";
+                    var shareText = $"{disaster.Title} — {disaster.Location} ({disaster.OccurredDate:MMMM dd, yyyy}) | Severity: {disaster.Severity} | Help/Details: {shareUrl} #Disaster #Relief";
+
                     <div class="col-lg-4 col-md-6" data-severity="@disaster.Severity.ToString()">
                         <div class="card disaster-card severity-@disaster.Severity.ToString().ToLower()">
                             <span class="card-badge badge bg-@GetSeverityBadgeClass(disaster.Severity)">
@@ -55,23 +58,95 @@
                                     <small class="text-muted">
                                         <i class="bi bi-clock"></i> @disaster.OccurredDate.Humanize()
                                     </small>
+
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-info details-btn me-1"
                                                 data-disaster-id="@disaster.Id"
                                                 data-disaster-title="@disaster.Title">
                                             <i class="bi bi-info-circle me-1"></i> Details
                                         </button>
+
                                         <button class="btn btn-sm btn-primary map-btn me-1"
                                                 data-disaster-id="@disaster.Id"
                                                 data-disaster-title="@disaster.Title"
                                                 data-disaster-location="@disaster.Location">
                                             <i class="bi bi-map me-1"></i> Check Map
                                         </button>
-                                        <button class="btn btn-sm btn-success donate-btn"
+
+                                        <button class="btn btn-sm btn-success donate-btn me-1"
                                                 data-disaster-id="@disaster.Id"
                                                 data-disaster-title="@disaster.Title">
                                             <i class="bi bi-heart-fill me-1"></i> Donate
                                         </button>
+
+                                        @* === Share dropdown (design অপরিবর্তিত রেখে শুধু এই ব্লকটি add) === *@
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                    data-bs-toggle="dropdown" aria-expanded="false" title="Share">
+                                                <i class="bi bi-share"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <!-- Facebook (supports quote) -->
+                                                <li>
+                                                    <a class="dropdown-item" target="_blank"
+                                                       href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(shareUrl)&quote=@Uri.EscapeDataString(shareText)">
+                                                        <i class="bi bi-facebook me-2"></i> Facebook
+                                                    </a>
+
+                                                </li>
+                                                <!-- WhatsApp (text) -->
+                                                <li>
+                                                    <a class="dropdown-item" target="_blank"
+                                                       href="https://wa.me/?text=@Uri.EscapeDataString(shareText)">
+                                                        <i class="bi bi-whatsapp me-2"></i> WhatsApp
+                                                    </a>
+                                                </li>
+                                                <!-- X / Twitter (text carries URL) -->
+                                                <li>
+                                                    <a class="dropdown-item" target="_blank"
+                                                       href="https://twitter.com/intent/tweet?text=@Uri.EscapeDataString(shareText)">
+                                                        <i class="bi bi-twitter-x me-2"></i> X (Twitter)
+                                                    </a>
+                                                </li>
+                                                <!-- Telegram (url + text) -->
+                                                <li>
+                                                    <a class="dropdown-item" target="_blank"
+                                                       href="https://t.me/share/url?url=@Uri.EscapeDataString(shareUrl)&text=@Uri.EscapeDataString(shareText)">
+                                                        <i class="bi bi-telegram me-2"></i> Telegram
+                                                    </a>
+                                                </li>
+                                                <!-- LinkedIn: copy text to clipboard first via JS then open -->
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item share-linkedin"
+                                                            data-share-url="https://www.linkedin.com/sharing/share-offsite/?url=@Uri.EscapeDataString(shareUrl)"
+                                                            data-share-text="@shareText">
+                                                        <i class="bi bi-linkedin me-2"></i> LinkedIn (text copied)
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider" /></li>
+                                                <!-- Device Share / Instagram via Web Share -->
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item share-web"
+                                                            data-share-title="@disaster.Title"
+                                                            data-share-url="@shareUrl"
+                                                            data-share-text="@shareText">
+                                                        <i class="bi bi-instagram me-2"></i> Instagram / Device Share…
+                                                    </button>
+                                                </li>
+                                                <!-- Copy link & text -->
+                                                <li>
+                                                    <button type="button"
+                                                            class="dropdown-item share-copy-link"
+                                                            data-share-url="@shareUrl"
+                                                            data-share-text="@shareText">
+                                                        <i class="bi bi-link-45deg me-2"></i> Copy link & text
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        @* === /Share dropdown === *@
                                     </div>
                                 </div>
                             </div>

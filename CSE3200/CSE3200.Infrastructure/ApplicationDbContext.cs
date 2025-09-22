@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CSE3200.Infrastructure.Identity;
 using CSE3200.Infrastructure.Seeds;
 
 namespace CSE3200.Infrastructure
@@ -15,7 +14,7 @@ namespace CSE3200.Infrastructure
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser,
         ApplicationRole, Guid,
         ApplicationUserClaim, ApplicationUserRole,
-        ApplicationUserLogin, 
+        ApplicationUserLogin,
         ApplicationRoleClaim,
         ApplicationUserToken>
     {
@@ -28,13 +27,9 @@ namespace CSE3200.Infrastructure
         public DbSet<Product> Products { get; set; }
         public DbSet<Disaster> Disasters { get; set; }
         public DbSet<Donation> Donations { get; set; }
-
         public DbSet<VolunteerAssignment> VolunteerAssignments { get; set; }
-
         public DbSet<FAQ> FAQs { get; set; }
-
         public DbSet<DisasterAlert> DisasterAlerts { get; set; }
-
         public DbSet<ChatMessage> ChatMessages { get; set; }
 
 
@@ -63,6 +58,27 @@ namespace CSE3200.Infrastructure
             builder.Entity<ApplicationRole>().HasData(RoleSeed.GetRoles());
             builder.Entity<ApplicationUserClaim>().HasData(ClaimSeed.GetClaims());
 
+            // Add this configuration for ApplicationUser
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(u => u.FirstName).HasMaxLength(100);
+                entity.Property(u => u.LastName).HasMaxLength(100);
+                entity.Property(u => u.Address).HasMaxLength(200);
+                entity.Property(u => u.City).HasMaxLength(100);
+                entity.Property(u => u.State).HasMaxLength(50);
+                entity.Property(u => u.ZipCode).HasMaxLength(20);
+                entity.Property(u => u.EmergencyContactName).HasMaxLength(100);
+                entity.Property(u => u.EmergencyContactPhone).HasMaxLength(20);
+                entity.Property(u => u.Skills).HasMaxLength(500);
+                entity.Property(u => u.VolunteerRequestStatus).HasMaxLength(20);
+                entity.Property(u => u.ProfilePictureUrl).HasMaxLength(500);
+
+                // Indexes for better query performance
+                entity.HasIndex(u => u.IsVolunteerRequested);
+                entity.HasIndex(u => u.VolunteerRequestStatus);
+                entity.HasIndex(u => u.RegistrationDate);
+            });
+
             builder.Entity<Disaster>(entity =>
             {
                 entity.Property(d => d.Title).IsRequired().HasMaxLength(200);
@@ -84,6 +100,7 @@ namespace CSE3200.Infrastructure
                 entity.HasIndex(d => d.CreatedBy);
                 entity.HasIndex(d => d.CreatedDate);
             });
+
             builder.Entity<Donation>(entity =>
             {
                 entity.Property(d => d.Amount).HasColumnType("decimal(18,2)");
@@ -115,6 +132,7 @@ namespace CSE3200.Infrastructure
                 entity.Property(va => va.Status).IsRequired().HasMaxLength(20);
                 entity.Property(va => va.AssignedBy).IsRequired().HasMaxLength(450);
                 entity.Property(va => va.VolunteerUserId).IsRequired().HasMaxLength(450);
+                entity.Property(va => va.Notes).HasMaxLength(500);
 
                 // Foreign key relationships
                 entity.HasOne(va => va.Disaster)
@@ -122,10 +140,20 @@ namespace CSE3200.Infrastructure
                       .HasForeignKey(va => va.DisasterId)
                       .OnDelete(DeleteBehavior.Cascade);
 
+                // REMOVE THIS - No VolunteerUser navigation property exists
+                // entity.HasOne(va => va.VolunteerUser)
+                //       .WithMany()
+                //       .HasForeignKey(va => va.VolunteerUserId)
+                //       .HasPrincipalKey(u => u.Id.ToString())
+                //       .OnDelete(DeleteBehavior.Restrict);
+
                 // Indexes
                 entity.HasIndex(va => va.DisasterId);
                 entity.HasIndex(va => va.VolunteerUserId);
                 entity.HasIndex(va => va.Status);
+                entity.HasIndex(va => va.AssignedDate);
+                entity.HasIndex(va => va.StartDate);
+                entity.HasIndex(va => va.EndDate);
             });
 
             builder.Entity<FAQ>(entity =>
@@ -138,8 +166,7 @@ namespace CSE3200.Infrastructure
                 entity.Property(f => f.CreatedDate).IsRequired();
                 entity.Property(f => f.CreatedBy).IsRequired().HasMaxLength(450);
 
-                // CHANGE THESE LINES - Make ModifiedBy and ModifiedDate optional
-                entity.Property(f => f.ModifiedBy).HasMaxLength(450).IsRequired(false); // ADD .IsRequired(false)
+                entity.Property(f => f.ModifiedBy).HasMaxLength(450).IsRequired(false);
                 entity.Property(f => f.ModifiedDate).IsRequired(false);
 
                 // Add indexes

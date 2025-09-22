@@ -16,7 +16,9 @@ using CSE3200.Domain.Repositories;
 using CSE3200.Domain.Services;
 using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Repositories;
+using CSE3200.Web.Services;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 
 namespace CSE3200.Web
 {
@@ -38,18 +40,32 @@ namespace CSE3200.Web
                 .WithParameter("migrationAssembly", _migrationAssembly)
                 .InstancePerLifetimeScope();
 
+            // Register ImageService
+            builder.Register(ctx =>
+            {
+                var configuration = ctx.Resolve<IConfiguration>();
+                return new ImageService(configuration);
+            })
+            .As<IImageService>()
+            .InstancePerLifetimeScope();
+
+            // Register other services
+            builder.RegisterType<OtpService>().As<IOtpService>().InstancePerLifetimeScope();
+            builder.RegisterType<EmailSender>().As<IEmailSender>().InstancePerLifetimeScope();
+
             // Register repositories
             builder.RegisterType<ProductRepository>().As<IProductRepository>()
                 .InstancePerLifetimeScope();
-          //  builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
-               // .InstancePerLifetimeScope();
             builder.RegisterType<DonationRepository>().As<IDonationRepository>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<VolunteerAssignmentRepository>().As<IVolunteerAssignmentRepository>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<FAQRepository>().As<IFAQRepository>()
                 .InstancePerLifetimeScope();
-            builder.RegisterType<DisasterAlertRepository>().As<IDisasterAlertRepository>().InstancePerLifetimeScope();
+            builder.RegisterType<DisasterAlertRepository>().As<IDisasterAlertRepository>()
+                .InstancePerLifetimeScope();
+            builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
+                .InstancePerLifetimeScope();
 
             // Register Unit of Work
             builder.RegisterType<ApplicationUnitOfWork>().As<IApplicationUnitOfWork>()
@@ -58,24 +74,19 @@ namespace CSE3200.Web
             // Register services
             builder.RegisterType<ProductService>().As<IProductService>()
                 .InstancePerLifetimeScope();
-            //builder.RegisterType<DisasterService>().As<IDisasterService>()
-              //  .InstancePerLifetimeScope();
             builder.RegisterType<DonationService>().As<IDonationService>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<VolunteerAssignmentService>().As<IVolunteerAssignmentService>()
                 .InstancePerLifetimeScope();
             builder.RegisterType<FAQService>().As<IFAQService>()
                 .InstancePerLifetimeScope();
-            builder.RegisterType<DisasterAlertService>().As<IDisasterAlertService>().InstancePerLifetimeScope();
+            builder.RegisterType<DisasterAlertService>().As<IDisasterAlertService>()
+                .InstancePerLifetimeScope();
+            builder.RegisterType<DisasterService>().As<IDisasterService>()
+                .InstancePerLifetimeScope();
 
             // Register command handlers
             builder.RegisterType<AddProductCommandHandler>().AsSelf();
-
-            // Disaster command handlers
-            //builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
-            //builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
-            //builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
-            //builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
 
             // FAQ command handlers
             builder.RegisterType<AddFAQCommandHandler>().As<IRequestHandler<AddFAQCommand, Guid>>();
@@ -95,20 +106,14 @@ namespace CSE3200.Web
             builder.RegisterType<UpdateDisasterAlertCommandHandler>().As<IRequestHandler<UpdateDisasterAlertCommand, bool>>();
             builder.RegisterType<ToggleDisasterAlertStatusCommandHandler>().As<IRequestHandler<ToggleDisasterAlertStatusCommand, bool>>();
             builder.RegisterType<GetDisasterAlertsQueryHandler>().As<IRequestHandler<GetDisasterAlertsQuery, IList<DisasterAlert>>>();
-            base.Load(builder);
 
             // Disaster-related registrations
-            builder.RegisterType<DisasterRepository>().As<IDisasterRepository>()
-                .InstancePerLifetimeScope();
-
-            builder.RegisterType<DisasterService>().As<IDisasterService>()
-                .InstancePerLifetimeScope();
-
-            // Register command handlers with logger
             builder.RegisterType<AddDisasterCommandHandler>().As<IRequestHandler<AddDisasterCommand, Guid>>();
             builder.RegisterType<ApproveDisasterCommandHandler>().As<IRequestHandler<ApproveDisasterCommand>>();
             builder.RegisterType<RejectDisasterCommandHandler>().As<IRequestHandler<RejectDisasterCommand>>();
             builder.RegisterType<GetPendingApprovalsQueryHandler>().As<IRequestHandler<GetPendingApprovalsQuery, IList<Disaster>>>();
+
+            base.Load(builder);
         }
     }
 }

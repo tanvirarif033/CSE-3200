@@ -1,6 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSE3200.Application.Features.Products.Commands;
+using CSE3200.Application.Services;
 using CSE3200.Infrastructure;
 using CSE3200.Infrastructure.Extensions;
 using CSE3200.Web;
@@ -91,9 +92,11 @@ try
     // Add email configuration
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
+
     // Register services
     builder.Services.AddScoped<IOtpService, OtpService>();
     builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 
     // Add HttpClient factory
     builder.Services.AddHttpClient();
@@ -101,8 +104,16 @@ try
     // Register Maps Service as a typed client
     builder.Services.AddHttpClient<IMapsService, GoogleMapsService>();
 
+
+    // REMOVE THESE LINES - They are already registered in WebModule
+    // builder.Services.AddScoped<IOtpService, OtpService>();
+    // builder.Services.AddTransient<IEmailSender, EmailSender>();
+    // Add ImageService
+    builder.Services.AddScoped<IImageService, ImageService>();
+
     // Register ChatHub with DI (IMPORTANT: This ensures DbContext is available in ChatHub)
     builder.Services.AddScoped<ChatHub>();
+
 
     var app = builder.Build();
 
@@ -119,7 +130,11 @@ try
     }
 
     app.UseHttpsRedirection();
+
+
+
     app.UseStaticFiles();
+
     app.UseRouting();
 
     // Order matters
@@ -144,6 +159,12 @@ try
         name: "faq",
         pattern: "faq",
         defaults: new { controller = "PublicFAQ", action = "Index" });
+
+    // Add these routes
+    app.MapControllerRoute(
+        name: "profile",
+        pattern: "profile/{action=Index}/{id?}",
+        defaults: new { controller = "Profile" });
 
     app.MapRazorPages().WithStaticAssets();
 
